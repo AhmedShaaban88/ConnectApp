@@ -1,0 +1,51 @@
+
+Login - Register:
+ 1 FB - Google - Twitter
+-----------------------------------------
+Dashboard
+create post with uploading images
+posts with pagination and comments likes
+
+Friends
+Add - Delete - view - search - accept - reject - pending
+
+Profile
+view
+edit
+
+-----------------------------------------
+Future
+Chat
+Real time data
+Activities
+
+---------------------------------
+
+Models
+users
+    name
+    email
+    phone
+    password
+    avatar
+    posts ref
+    friends ref
+
+posts
+    text
+    timestamps
+    images
+    comments
+    likes
+
+friends
+    requester ref
+    receiver    ref
+    status
+        0 add friend
+        1 requested
+        2 pending
+        3 accepted
+
+
+
