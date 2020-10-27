@@ -25,6 +25,7 @@ mongoose.connection.on("open", () => {
 mongoose.connection.on("error", (err) => {
   console.log(err.message);
 });
+
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

@@ -1,6 +1,6 @@
-const { Schema, model, SchemaTypes } = require("mongoose");
+const { Schema, model } = require("mongoose");
 const encryptPassword = require('../utils/encryptPassword');
-
+const mongoosePaginate = require('mongoose-paginate');
 const userSchema = new Schema(
   {
     name: { type: String, trim: true, required: true },
@@ -13,9 +13,11 @@ const userSchema = new Schema(
     verifyCodeExpires: Date,
     forgetCode: Number,
     forgetCodeExpires: Date,
+    friends: [{type: Schema.Types.ObjectId, ref: 'FriendShip'}]
   },
   { collection: "User", runValidators: true }
 );
+userSchema.plugin(mongoosePaginate);
 userSchema.pre("save", function (next) {
   let user = this;
   if (!user.isModified("password")) return next();

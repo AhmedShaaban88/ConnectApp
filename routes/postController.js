@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 postController.get('/:id', async (req,res, next) =>{
    const {id} = req.params;
-    Post.findById(mongoose.Types.ObjectId(id), {__v: 0}).populate({path: 'author', select: '-confirmed -password -__v -posts -friends'}).exec((err, post)=>{
+    Post.findById(mongoose.Types.ObjectId(id), {__v: 0}).populate({path: 'author', select: '-confirmed -password -__v'}).exec((err, post)=>{
         if(err) next(err);
         else if(!post) return res.status(404).json('post does not exist');
        return res.status(200).json(post);
