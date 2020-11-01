@@ -21,14 +21,11 @@ likeController.put('/post/:id', async (req,res,next)=>{
 });
 likeController.get('/:id', async (req,res,next)=>{
     const {id} = req.params;
-    const post = await Post.findById(mongoose.Types.ObjectId(id));
-    if(!post) return res.status(404).json('post does not exist');
-    else{
-        Post.findById(mongoose.Types.ObjectId(id)).populate({path: 'likes', select: '-confirmed -password -__v'}).exec((err, post)=>{
+        Post.findById(mongoose.Types.ObjectId(id)).populate({path: 'likes', select: '-confirmed -password -__v, -friends'}).exec((err, post)=>{
             if(err) next(err);
+            else if(!post) return res.status(404).json('post does not exist');
             res.status(200).json(post.likes);
         });
-    }
 });
 
 module.exports = likeController;

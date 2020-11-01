@@ -1,16 +1,8 @@
-
 Login - Register:
  1 FB - Google - Twitter
 -----------------------------------------
-Dashboard
-posts with pagination and comments likes
 
 
-Profile
-view
-friend profile
-
------------------------------------------
 Future
 Chat
 Real time data

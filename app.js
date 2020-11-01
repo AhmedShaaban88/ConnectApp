@@ -1,8 +1,8 @@
 require("dotenv").config();
 const createError = require("http-errors");
 const express = require("express");
-const logger = require("morgan");
 const helmet = require("helmet");
+const cors = require('cors');
 const compression = require("compression");
 const mongoose = require("mongoose");
 const path = require("path");
@@ -26,10 +26,10 @@ mongoose.connection.on("error", (err) => {
   console.log(err.message);
 });
 
-app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(helmet());
+app.use(cors());
 app.use(compression());
 
 app.use("/api/auth", authController);
