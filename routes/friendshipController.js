@@ -100,7 +100,7 @@ friendShipController.get('/friends', async (req,res,next)=>{
                 {"requester": mongoose.Types.ObjectId(req.user)},
                 {"status":  3 }
             ]}, {select: '-requester -__v -status', limit: currentLimit, page: currentPage,populate: { path: 'recipient',
-                select: '-confirmed -password -__v -_id -friends'}}, (err, results)=>{
+                select: '-confirmed -password -__v -_id -friends -avatarId'}}, (err, results)=>{
             res.status(200).json(results);
         });
     } catch (err) {
@@ -122,7 +122,7 @@ friendShipController.get('/search', async (req,res,next)=>{
            if(err) next(err);
            else if(results.total === 0){
                User.paginate({$or: [{name: {$regex: keyword, $options: 'ix'} }, {email: {$regex: keyword, $options: 'ix'} }, {phone: {$regex: keyword, $options: 'ix'} }]},
-                   {select: {confirmed: 0, friends: 0, password: 0, __v: 0},
+                   {select: {confirmed: 0, friends: 0, password: 0, __v: 0, avatarId: 0},
                    limit: currentLimit, page: currentPage}, (err, result)=>{
                        if(err) next(err);
                        res.status(200).json(result)

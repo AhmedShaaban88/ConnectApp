@@ -8,6 +8,7 @@ const userSchema = new Schema(
     phone: String,
     password: { type: String, minLength: 8, required: true },
     avatar: String,
+    avatarId: String,
     confirmed: { type: Boolean, default: false },
     verifyCode: Number,
     verifyCodeExpires: Date,

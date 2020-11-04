@@ -7,6 +7,7 @@ const upload = require('../config/avatarUploader');
 const sendVerificationEmail = require('../config/verificationEmail');
 const sendVerificationMobile = require('../config/verificationMobile');
 const decryptPassword = require('../utils/decryptPassword');
+const cloudinary = require('cloudinary').v2;
 
 authController.post(
   "/register",
@@ -29,9 +30,10 @@ authController.post(
     const { email, phone, password, name } = req.body;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ errors: errors.array().map((err) => err.msg) });
+      return cloudinary.uploader.destroy(req.file.filename).then(r => res
+          .status(400)
+          .json({ errors: errors.array().map((err) => err.msg) })).catch(e => next(e));
+
     } else if (!email && !phone) {
       return res.status(400).json({ errors: "no phone or email provided" });
     }
@@ -48,7 +50,8 @@ authController.post(
       newUser.email = email;
     }
     if (req.file){
-      newUser.avatar = "/avatar/" + req.file.filename;
+      newUser.avatar = req.file.path;
+      newUser.avatarId = req.file.filename;
     }
     newUser.save((err, obj) => {
       if (err && err.code === 11000)

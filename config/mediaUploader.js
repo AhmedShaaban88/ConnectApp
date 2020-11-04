@@ -1,13 +1,12 @@
 const multer = require("multer");
 const path = require("path");
-const uid = require("uniqid");
-const storage = multer.diskStorage({
-    destination: function (req, file, callback) {
-        callback(null, path.join(__dirname, "../uploads/media"));
-    },
-    filename: function (req, file, cb) {
-        const fileFormat = file.originalname.split(".");
-        cb(null, Date.now() + uid() + "." + fileFormat[fileFormat.length - 1]);
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+require('./cloudinaryConfig');
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'media',
     },
 });
 const mediaUploader = multer({

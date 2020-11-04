@@ -19,7 +19,16 @@ dashboardController.get('/', async (req,res,next)=>{
                 as: 'friends'
             }},
         {$match: {$or: [{"$expr": { "$in": [ "$author", "$friends.recipient" ] }}, {author: mongoose.Types.ObjectId(req.user)}]}},
-        {$project: {__v: 0, friends: 0}}
+        {$project: {__v: 0, friends: 0}},
+        {
+            $lookup: {
+                from: 'User',
+                localField: 'author',
+                foreignField: '_id',
+                as: 'author'
+            }},
+        {$unwind: '$author'},
+        {$project: {'author.__v': 0, 'author.friends': 0, 'author.confirmed': 0, 'author.password': 0, 'author.avatarId': 0}}
     ]);
     Posts.aggregatePaginate(posts, {limit: currentLimit, page: currentPage, sort: {'updated_at': -1}}, (err, result) =>{
         if(err) next(err);
