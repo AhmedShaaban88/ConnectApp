@@ -6,9 +6,9 @@ const generateToken = require('../utils/generateToken');
 const upload = require('../config/avatarUploader');
 const sendVerificationEmail = require('../config/verificationEmail');
 const sendVerificationMobile = require('../config/verificationMobile');
-const decryptPassword = require('../utils/decryptPassword');
 const cloudinary = require('cloudinary').v2;
 
+const loginController = require('./loginController');
 authController.post(
   "/register",
   upload.single("avatar"),
@@ -249,38 +249,5 @@ authController.post('/reset-password',[
     });
   }
 });
-
-authController.post('/login',function (req,res,next) {
-  const {email, phone, password} = req.body;
-  if(!email && !phone){
-    return res.status(400).json({error: 'must send email or phone'});
-  }
-  User.findOne({$and:[{email: email}, {phone: phone}]},(err, user) => {
-    if(err) next(err);
-    else if(user === null){
-      return res.status(404).json({error: "this user does not exist"});
-    }
-    else if(!user.confirmed){
-      return res.status(400).json({error: "please activate your account first"});
-    }
-    decryptPassword(password, user.password).then(match => {
-      if(!match) return res.status(400).json({error: 'password is incorrect'});
-      generateToken({name: user.name, email: user.email, userId: user._id, phone: user.phone}, (err, token) => {
-        if(err) next(err);
-        return res.status(200).json({
-          name: user.name,
-          email: user.email,
-          avatar: user.avatar,
-          phone: user.phone,
-          userId: user._id,
-          token: token
-        })
-      });
-    }).catch(err => {
-      return next(err);
-    });
-
-  })
-});
-
+authController.use('/login', loginController);
 module.exports = authController;
