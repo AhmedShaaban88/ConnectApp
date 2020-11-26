@@ -3,6 +3,7 @@ const {body, validationResult} = require("express-validator");
 const mongoose = require('mongoose');
 const Post = require('../models/post');
 const Comment = require('../models/comment');
+const Notification = require('../models/notification');
 const mediaUploader = require('../config/mediaUploader');
 const cloudinary = require('cloudinary').v2;
 
@@ -43,7 +44,11 @@ commentController.put('/:id',
         const {id} = req.params;
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            req.files.map(async (media) => await cloudinary.uploader.destroy(media.filename));
+            if (req.files) {
+                return req.files.map(async (media) => await cloudinary.uploader.destroy(media.filename)).then(r => res
+                    .status(400)
+                    .json({errors: errors.array().map((err) => err.msg)})).catch(e => next(e));
+            }
             return res
                 .status(400)
                 .json({errors: errors.array().map((err) => err.msg)});
@@ -53,19 +58,33 @@ commentController.put('/:id',
             author: req.user,
             post: mongoose.Types.ObjectId(id)
         });
-        if (req.files){
+        if (req.files) {
             req.files.map((file, index) => {
                 comment.media = comment.media.concat({path: file.path, title: file.filename});
             });
         }
-        comment.save((err, comment) =>{
+        comment.save((err, comment) => {
             if (err) next(err);
-            Post.findOneAndUpdate({_id: mongoose.Types.ObjectId(id)}, {$push: {comments: comment}}, (err, post) => {
+            Post.findOneAndUpdate({_id: mongoose.Types.ObjectId(id)}, {$push: {comments: comment}}, async (err, post) => {
                 if (err) next(err);
-                return res.status(200).json(comment);
+                else if (String(post.author) !== String(req.user)) {
+                    try {
+                        const notification = new Notification({
+                            receiver: mongoose.Types.ObjectId(post.author),
+                            by: mongoose.Types.ObjectId(req.user),
+                            post: mongoose.Types.ObjectId(id),
+                            type: 'comment',
+                        });
+                        const notificationSave = await notification.save();
+                        if (!notificationSave) next(new Error('something wrong when trying to save the notification'));
+                        return res.status(200).json(comment);
+                    } catch (e) {
+                        next(e)
+                    }
+                    return res.status(200).json(comment);
+                }
             });
         });
-
     });
 commentController.delete('/:id', async (req, res, next) => {
     const {id} = req.params;
@@ -108,7 +127,11 @@ commentController.put('/edit/:id/:commentId',
         const {comment} =req;
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            req.files.map(async (media) => await cloudinary.uploader.destroy(media.filename));
+            if(req.files){
+                return req.files.map(async (media) => await cloudinary.uploader.destroy(media.filename)).then(r => res
+                    .status(400)
+                    .json({ errors: errors.array().map((err) => err.msg) })).catch(e => next(e));
+            }
             return res
                 .status(400)
                 .json({errors: errors.array().map((err) => err.msg)});

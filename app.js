@@ -10,14 +10,14 @@ const authController = require("./routes/authController");
 const protectedController = require("./routes/protectedController");
 const authorizedUser = require("./middleware/authorizedUser");
 
-
 const app = express();
 mongoose.connect(process.env.DB_URL, {
   autoIndex: false,
   useUnifiedTopology: true,
   useNewUrlParser: true,
   useCreateIndex: true,
-  useFindAndModify: false
+  useFindAndModify: false,
+  poolSize: 100
 });
 mongoose.connection.on("open", () => {
   console.log("connected to db");

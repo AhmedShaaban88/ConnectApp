@@ -8,6 +8,7 @@ const sendVerificationEmail = require('../config/verificationEmail');
 const sendVerificationMobile = require('../config/verificationMobile');
 const cloudinary = require('cloudinary').v2;
 
+
 const loginController = require('./loginController');
 authController.post(
   "/register",
@@ -30,9 +31,13 @@ authController.post(
     const { email, phone, password, name } = req.body;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return cloudinary.uploader.destroy(req.file.filename).then(r => res
-          .status(400)
-          .json({ errors: errors.array().map((err) => err.msg) })).catch(e => next(e));
+      if(req.file){
+        return cloudinary.uploader.destroy(req.file.filename).then(r => res
+            .status(400)
+            .json({ errors: errors.array().map((err) => err.msg) })).catch(e => next(e));
+      }
+      return res.status(400)
+          .json({ errors: errors.array().map((err) => err.msg) });
 
     } else if (!email && !phone) {
       return res.status(400).json({ errors: "no phone or email provided" });

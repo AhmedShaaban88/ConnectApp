@@ -1,6 +1,33 @@
 const dashboardController = require("express").Router();
 const Posts = require("../models/post");
 const mongoose = require('mongoose');
+const {dashboardIo} = require('../config/socket');
+const newFeed = require('../utils/newFeed');
+dashboardIo.on('connect', async (socket) =>{
+    const newPostNotifiy = Posts.watch([ { $match : {"operationType" : "insert" } }], { fullDocument : "updateLookup" });
+    newPostNotifiy.once('change', async next => {
+        try {
+            const newPost = await newFeed(next.fullDocument._id, socket);
+            if(newPost.length > 0){
+                const resumeToken = next._id;
+                if (resumeToken) {
+                    socket.emit('new-post', newPost[0]);
+                    newPostNotifiy.close();
+                    const newChangeStream = Posts.watch([ { $match : {"operationType" : "insert" } }], { fullDocument : "updateLookup", startAfter: resumeToken });
+                    newChangeStream.on('change', async data => {
+                        const newPost = await newFeed(data.fullDocument._id, socket);
+                        if(newPost.length > 0){
+                            socket.emit('new-post', newPost[0]);
+                        }
+                    });
+                }
+            }
+        }catch (e) {
+            socket.disconnect()
+        }
+    });
+
+});
 
 dashboardController.get('/', async (req,res,next)=>{
     const {page, limit} = req.query;

@@ -23,7 +23,11 @@ postController.post('/create',
         const {content} = req.body;
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            req.files.map(async (media) => await cloudinary.uploader.destroy(media.filename));
+            if(req.files){
+                return req.files.map(async (media) => await cloudinary.uploader.destroy(media.filename)).then(r => res
+                    .status(400)
+                    .json({ errors: errors.array().map((err) => err.msg) })).catch(e => next(e));
+            }
             return res
                 .status(400)
                 .json({ errors: errors.array().map((err) => err.msg) });
@@ -80,7 +84,11 @@ postController.put('/:id',
     const {content, deletedFiles} = req.body;
     const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            req.files.map(async (media) => await cloudinary.uploader.destroy(media.filename));
+            if(req.files){
+                return req.files.map(async (media) => await cloudinary.uploader.destroy(media.filename)).then(r => res
+                    .status(400)
+                    .json({ errors: errors.array().map((err) => err.msg) })).catch(e => next(e));
+            }
             return res
                 .status(400)
                 .json({ errors: errors.array().map((err) => err.msg) });

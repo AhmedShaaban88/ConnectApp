@@ -1,6 +1,9 @@
 const likeController = require("express").Router();
 const mongoose = require('mongoose');
 const Post = require('../models/post');
+const Notification = require('../models/notification');
+
+
 likeController.put('/post/:id', async (req,res,next)=>{
     const {id} = req.params;
     const {user} = req;
@@ -13,9 +16,31 @@ likeController.put('/post/:id', async (req,res,next)=>{
         });
     }
     else {
-        Post.updateOne({_id: mongoose.Types.ObjectId(id)}, {$addToSet: {likes: user}}, (err, post) => {
+        Post.updateOne({_id: mongoose.Types.ObjectId(id)}, {$addToSet: {likes: user}}, async (err, newPost) => {
             if (err) next(err);
+            else if(String(post.author) !== String(user)){
+                try{
+                    const duplicateNotification = await Notification.findOne(
+                        {$and: [{by: mongoose.Types.ObjectId(user)}, {post: mongoose.Types.ObjectId(id)}, {type: 'like'}]});
+                    if(!duplicateNotification){
+                        const notification = new Notification({
+                            receiver: mongoose.Types.ObjectId(post.author),
+                            by: mongoose.Types.ObjectId(user),
+                            post: mongoose.Types.ObjectId(id),
+                            type: 'like',
+                        });
+                        const notificationSave = await notification.save();
+                        if(!notificationSave) next(new Error('something wrong when trying to save the notification'));
+                        return res.status(200).json('liked');
+                    }else{
+                        return res.status(200).json('liked');
+                    }
+                }catch (e) {
+                    next(e)
+                }
+            }
             return res.status(200).json('liked');
+
         });
     }
 });

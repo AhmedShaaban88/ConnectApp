@@ -1,7 +1,7 @@
 let app = require('../app');
+let {io} = require('../config/socket');
 let debug = require('debug')('connect-app:server');
 let http = require('http');
-
 
 
 let port = normalizePort(process.env.PORT || '4000');
@@ -12,9 +12,9 @@ let server = http.createServer(app);
 
 
 server.listen(port);
+io.attach(server);
 server.on('error', onError);
 server.on('listening', onListening);
-
 
 function normalizePort(val) {
   let port = parseInt(val, 10);

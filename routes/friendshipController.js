@@ -2,6 +2,48 @@ const friendShipController = require('express').Router();
 const mongoose = require('mongoose');
 const FriendShip = require('../models/friendship');
 const User = require('../models/user');
+const Notification = require('../models/notification');
+const {friendsIo} = require('../config/socket');
+
+friendsIo.on('connect', async (socket) =>{
+    let friendShipCount = await FriendShip.countDocuments({$and: [
+            {requester: mongoose.Types.ObjectId(socket.userId)}, {status: 2}]});
+    if(isNaN(friendShipCount)) socket.disconnect();
+    socket.emit('count', friendShipCount);
+    const newFriendNotifiy = FriendShip.watch([ { $match : {"operationType" : "insert" } }], { fullDocument : "updateLookup" });
+    newFriendNotifiy.once('change', async next => {
+        try {
+                const resumeToken = next._id;
+                if (resumeToken) {
+                    newFriendNotifiy.close();
+                    const newChangeStream = FriendShip.watch([ { $match : {"operationType" : "insert" } }], { fullDocument : "updateLookup", startAfter: resumeToken });
+                    newChangeStream.on('change', async data => {
+                        if(data.fullDocument.status === 2 && String(data.fullDocument.requester) === String(socket.userId)){
+                            const newFriend = await FriendShip.findById(mongoose.Types.ObjectId(data.fullDocument._id)).populate({
+                                path: 'recipient',
+                                select: '-confirmed -friends -password -__v'
+                            }).select('-__v -status').exec();
+                            if(newFriend){
+                                friendShipCount++;
+                                socket.emit('count', friendShipCount);
+                                socket.emit('new-friend', newFriend);
+                            }
+                        }
+
+                    });
+                }
+        }catch (e) {
+            socket.disconnect()
+        }
+    });
+    socket.on('decrease-count', () => {
+        if(friendShipCount > 0){
+            friendShipCount--;
+            socket.emit('count', friendShipCount);
+        }
+    });
+
+});
 friendShipController.put('/add', async (req,res)=>{
     const {recipient} = req.body;
     const requester = req.user;
@@ -77,6 +119,13 @@ friendShipController.put('/accept', async (req,res,next)=>{
                 { requester: mongoose.Types.ObjectId(requester), recipient: mongoose.Types.ObjectId(recipient) },
                 {status: 3},
             );
+            const notification = new Notification({
+                receiver: mongoose.Types.ObjectId(recipient),
+                by: mongoose.Types.ObjectId(requester),
+                type: 'friend',
+            });
+            const notificationSave = await notification.save();
+            if(!notificationSave) next(new Error('something wrong when trying to save the notification'));
         }
         catch (e) {
             next(e);
@@ -137,6 +186,24 @@ friendShipController.get('/search', async (req,res,next)=>{
     }
 
 
+});
+friendShipController.get('/requests', async (req,res,next)=>{
+    let {limit, page} = req.query;
+    let currentPage = parseInt(page);
+    let currentLimit = parseInt(limit);
+    if(limit < 5) currentLimit =5;
+    if(page < 1) currentPage =1;
+    try {
+        FriendShip.paginate({$and:[
+                {"requester": mongoose.Types.ObjectId(req.user)},
+                {"status":  2 }
+            ]}, {select: '-requester -__v -status', limit: currentLimit, page: currentPage,populate: { path: 'recipient',
+                select: '-confirmed -password -__v -_id -friends -avatarId'}}, (err, results)=>{
+            res.status(200).json(results);
+        });
+    } catch (err) {
+        next(err)
+    }
 });
 
 module.exports = friendShipController;

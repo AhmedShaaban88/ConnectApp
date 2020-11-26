@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-
 function authorizedUser(req,res,next) {
     const token = req.headers.authorization ? req.headers.authorization.split(' ')[1] : null;
     if(!token) return res.status(401).end('unauthorized');
@@ -9,4 +8,5 @@ function authorizedUser(req,res,next) {
         next()
     });
 }
+
 module.exports = authorizedUser;

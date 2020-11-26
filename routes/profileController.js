@@ -28,9 +28,13 @@ profileController.put('/edit',async (req,res,next) =>{
         const {user, userInfo} = req;
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return cloudinary.uploader.destroy(req.file.filename).then(r => res
-                .status(400)
-                .json({ errors: errors.array().map((err) => err.msg) })).catch(e => next(e));
+            if(req.file){
+                return cloudinary.uploader.destroy(req.file.filename).then(r => res
+                    .status(400)
+                    .json({ errors: errors.array().map((err) => err.msg) })).catch(e => next(e));
+            }
+            return res.status(400)
+                .json({ errors: errors.array().map((err) => err.msg) });
         }
 
         const newProfile = {
