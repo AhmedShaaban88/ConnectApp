@@ -17,4 +17,6 @@ const auth = ((socket, next) => {
 const notificationsIo = io.of('/notifications').use(auth);
 const dashboardIo = io.of('/dashboard').use(auth);
 const friendsIo = io.of('/friends').use(auth);
-module.exports = {io,dashboardIo, notificationsIo, friendsIo};
+const messageIo = io.of('/messages').use(auth);
+const messengerIo = io.of('/messenger').use(auth);
+module.exports = {io,dashboardIo, notificationsIo, friendsIo, messageIo, messengerIo};

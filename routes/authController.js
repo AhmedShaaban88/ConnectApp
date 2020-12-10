@@ -7,7 +7,7 @@ const upload = require('../config/avatarUploader');
 const sendVerificationEmail = require('../config/verificationEmail');
 const sendVerificationMobile = require('../config/verificationMobile');
 const cloudinary = require('cloudinary').v2;
-
+const {ObjectId} = mongoose.Types;
 
 const loginController = require('./loginController');
 authController.post(
@@ -88,7 +88,7 @@ authController.post(
 
 authController.post('/verify-account', function (req, res, next) {
   const {code, userId} = req.body;
-  User.findById(mongoose.Types.ObjectId(userId),(err, user) => {
+  User.findById(ObjectId(userId),(err, user) => {
     if(err) next(err);
     else if(user === null){
       return res.status(404).json({error: "this user does not exist"})
@@ -104,7 +104,7 @@ authController.post('/verify-account', function (req, res, next) {
     }
     generateToken({name: user.name, email: user.email, userId: user._id, phone: user.phone}, (err, token) => {
       if(err) next(err);
-      User.updateOne({_id: mongoose.Types.ObjectId(userId)}, {$set: {confirmed: true}
+      User.updateOne({_id: ObjectId(userId)}, {$set: {confirmed: true}
         ,$unset: {verifyCode: "", verifyCodeExpires: ""}}, (err, currentUser) => {
         return res.status(200).json({
           name: user.name,
