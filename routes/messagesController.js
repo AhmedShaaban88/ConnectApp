@@ -96,6 +96,27 @@ messagesController.put('/seen/:id', async (req,res,next)=>{
 
 });
 messagesController.get('/rooms', async (req,res,next)=>{
+    let {limit, page} = req.query;
+    let currentPage = parseInt(page);
+    let currentLimit = parseInt(limit);
+    if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
+    if(page < 1 || !Boolean(currentPage)) currentPage =1;
+    const rooms = await Room.paginate({participants: {$in: [req.user]}},
+        {limit: currentLimit, page: currentPage,
+            sort: {updatedAt: -1},
+            select: {participants: {$elemMatch: {$ne: req.user}}},
+            populate: [{
+            path: 'lastMessage',
+            select: '-receiver -roomId -updatedAt -__v -media',
+            },{
+            path: 'participants',
+            select: '-confirmed -password -__v -friends -forgetCode -forgetCodeExpires -avatarId'
+            }]});
+    res.status(200).json(rooms)
+});
+
+messagesController.get('/:id', async (req,res,next)=>{
+    const {id} = req.params;
     let {limit, page, skip} = req.query;
     let currentPage = parseInt(page);
     let currentLimit = parseInt(limit);
@@ -103,30 +124,7 @@ messagesController.get('/rooms', async (req,res,next)=>{
     if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
     if(page < 1 || !Boolean(currentPage)) currentPage =1;
     if(skip < 0) currentSkip =0;
-    const rooms = await Room.paginate({participants: {$in: [req.user]}},
-        {limit: currentLimit, page: currentPage,
-            sort: {updatedAt: -1},
-            offset: currentSkip,
-            select: {participants: {$elemMatch: {$ne: req.user}}},
-            populate: [{
-            path: 'lastMessage',
-            select: '-receiver -roomId -updatedAt -__v -media',
-            },{
-            path: 'participants',
-            select: '-confirmed -password -__v -friends -avatarId'
-            }]});
-    res.status(200).json(rooms)
-});
-
-messagesController.get('/:id', async (req,res,next)=>{
-    const {id} = req.params;
-    let {limit, page} = req.query;
-    let currentPage = parseInt(page);
-    let currentLimit = parseInt(limit);
-    if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
-    if(page < 1 || !Boolean(currentPage)) currentPage =1;
-    if(!id) return res.status(400).json('id is required');
-    else if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
+    if(!ObjectId.isValid(id) || !id) return res.status(400).json('id is not valid');
     const friendId = ObjectId(id);
     const friend = await User.findById(friendId);
     if(!friend) return res.status(404).json('this user does not exist');
@@ -134,7 +132,7 @@ messagesController.get('/:id', async (req,res,next)=>{
     if(String(id) === String(req.user)) return res.status(400).json('you can not chat with yourself');
     const room = await Room.findOne({participants: {$all: [userId, friendId]}}).select({participants: {$elemMatch: {$ne: req.user}}}).populate({
         path: 'participants',
-        select: '-confirmed -password -__v -friends -avatarId'
+        select: '-confirmed -password -__v -friends -forgetCode -forgetCodeExpires -avatarId'
     });
               if(!room){
                   const newRoom = new Room({
@@ -144,11 +142,12 @@ messagesController.get('/:id', async (req,res,next)=>{
                   if(!newRoomDoc) next(new Error('something wrong when trying to save the chat room'));
                   const roomDoc = await Room.findById(ObjectId(newRoomDoc._id)).select({participants: {$elemMatch: {$ne: req.user}}}).populate({
                       path: 'participants',
-                      select: '-confirmed -password -__v -friends -avatarId'
+                      select: '-confirmed -password -__v -friends -forgetCode -forgetCodeExpires -avatarId'
                   });
                   try {
                       const messages =  await Message.paginate({roomId: ObjectId(newRoomDoc._id)},
                           {select: '-__v -updatedAt', limit: currentLimit, page: currentPage,
+                              offset: currentSkip,
                               sort: {'delivered_at': -1}});
                       return res.status(200).json({...messages, roomId: newRoomDoc._id, friend: roomDoc.participants[0]});
                   } catch (err) {
@@ -158,6 +157,7 @@ messagesController.get('/:id', async (req,res,next)=>{
                   try {
                      const messages =  await Message.paginate({roomId: ObjectId(room._id)},
                          {select: '-__v -updatedAt', limit: currentLimit, page: currentPage,
+                             offset: currentSkip,
                              sort: {'delivered_at': -1}});
                      return res.status(200).json({...messages, roomId: room._id, friend: room.participants[0]});
                   } catch (err) {

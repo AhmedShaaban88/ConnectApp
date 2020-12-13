@@ -87,14 +87,14 @@ profileController.get('/view/:id', async (req,res,next)=>{
     const {id} = req.params;
     if(!id) return res.status(400).json('User id required');
     try{
-        const user = await User.findById(ObjectId(id), {confirmed: 0, password:0, __v: 0, avatarId: 0}).populate({
+        const user = await User.findById(ObjectId(id), {confirmed: 0, password:0, __v: 0, avatarId: 0, forgetCode: 0 , forgetCodeExpires: 0}).populate({
             path: 'friends',
             match: {$and: [{status: {$eq: 3}}, {requester: ObjectId(id)}]},
             select: '-requester -__v -status',
             perDocumentLimit: 5,
             populate: {
                 path: 'recipient',
-                select: '-password -confirmed -friends -__v -avatarId',
+                select: '-password -confirmed -friends -forgetCode -forgetCodeExpires -__v -avatarId',
             }
         });
         const friendStatus = await FriendShip.findOne({$and: [{'requester': ObjectId(req.user)},{'recipient': ObjectId(id)}]});

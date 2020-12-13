@@ -18,7 +18,7 @@ commentController.get('/:id', async (req,res,next)=>{
     try{
          Comment.paginate({post: ObjectId(id)},
              {limit: currentLimit, page: currentPage, select: '-__v -post', sort: {'updated_at': -1},
-                 populate: {path: 'author', select: '-confirmed -password -__v -avatarId -friends'}}, (err, comments)=> {
+                 populate: {path: 'author', select: '-confirmed -password -__v -avatarId -friends -forgetCode -forgetCodeExpires'}}, (err, comments)=> {
              if(err) next(err);
              res.status(200).json(comments);
              })

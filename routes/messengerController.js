@@ -36,7 +36,7 @@ messengerIo.on('connect', async (socket) =>{
                 const lastMessage = await Room.findById(ObjectId(next.fullDocument._id)).populate({
                     path: 'participants',
                     match: {_id: {$ne: userId}},
-                    select: '-confirmed -password -__v -friends -avatarId'
+                    select: '-confirmed -password -__v -friends -avatarId -forgetCode -forgetCodeExpires'
                 }).populate({
                     path: 'lastMessage',
                     select: '-receiver -roomId -updatedAt -__v -media',
@@ -50,7 +50,7 @@ messengerIo.on('connect', async (socket) =>{
                             const lastMessage = await Room.findById(ObjectId(data.fullDocument._id)).populate({
                                 path: 'participants',
                                 match: {_id: {$ne: userId}},
-                                select: '-confirmed -password -__v -friends -avatarId'
+                                select: '-confirmed -password -__v -friends -avatarId -forgetCode -forgetCodeExpires'
                             }).populate({
                                 path: 'lastMessage',
                                 select: '-receiver -roomId -updatedAt -__v -media',

@@ -7,7 +7,7 @@ const {ObjectId} = mongoose.Types;
 
 postController.get('/:id', async (req,res, next) =>{
    const {id} = req.params;
-    Post.findById(ObjectId(id), {__v: 0}).populate({path: 'author', select: '-confirmed -password -__v -avatarId -friends'}).exec((err, post)=>{
+    Post.findById(ObjectId(id), {__v: 0}).populate({path: 'author', select: '-confirmed -password -__v -avatarId -forgetCode -forgetCodeExpires -friends'}).exec((err, post)=>{
         if(err) next(err);
         else if(!post) return res.status(404).json('post does not exist');
        return res.status(200).json(post);

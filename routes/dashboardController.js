@@ -57,7 +57,7 @@ dashboardController.get('/', async (req,res,next)=>{
                 as: 'author'
             }},
         {$unwind: '$author'},
-        {$project: {'author.__v': 0, 'author.friends': 0, 'author.confirmed': 0, 'author.password': 0, 'author.avatarId': 0}}
+        {$project: {'author.__v': 0, 'author.friends': 0, 'author.confirmed': 0, 'author.password': 0, 'author.avatarId': 0, 'author.forgetCode': 0, 'author.forgetCodeExpires': 0}}
     ]);
     Posts.aggregatePaginate(posts, {limit: currentLimit, page: currentPage, offset: currentSkip, sort: {'updated_at': -1}}, (err, result) =>{
         if(err) next(err);

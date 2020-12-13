@@ -12,7 +12,7 @@ notificationsIo.on('connect', async (socket) =>{
     postNotifiy.once('change', async next => {
        const notification =  await Notification.findById(ObjectId(next.fullDocument._id)).populate({
             path: 'by',
-            select: '-confirmed -friends -password -__v'
+            select: '-confirmed -friends -password -forgetCode -forgetCodeExpires -__v'
         }).select('-__v -updatedAt -expires').exec();
        if(!notification) socket.disconnect();
                 const resumeToken = next._id;
@@ -25,7 +25,7 @@ notificationsIo.on('connect', async (socket) =>{
                     newChangeStream.on('change', async data => {
                         const newNotification = await Notification.findById(ObjectId(data.fullDocument._id)).populate({
                             path: 'by',
-                            select: '-confirmed -friends -password -__v'
+                            select: '-confirmed -friends -password -forgetCode -forgetCodeExpires -__v'
                         }).select('-__v -updatedAt -expires').exec();
                         if(!newNotification) socket.disconnect();
                         notificationCount++;
@@ -65,7 +65,7 @@ notificationController.get('/', (req,res,next)=>{
     Notification.paginate({receiver: ObjectId(req.user)},
         {select: '-expires -updatedAt -__v', limit: currentLimit, page: currentPage, sort: {'notified_at': -1}, populate: {
                 path: 'by',
-                select: '-confirmed -friends -password -__v'
+                select: '-confirmed -friends -password -forgetCode -forgetCodeExpires -__v'
             }}, (err, results) => {
             if(err) next(err);
             res.status(200).json(results);

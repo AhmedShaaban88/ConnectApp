@@ -19,7 +19,7 @@ friendsIo.on('connect', async (socket) =>{
                 if (resumeToken) {
                     const newFriend = await FriendShip.findById(ObjectId(next.fullDocument._id)).populate({
                         path: 'recipient',
-                        select: '-confirmed -friends -password -__v'
+                        select: '-confirmed -friends -password -forgetCode -forgetCodeExpires -__v'
                     }).select('-__v -status').exec();
                     if(newFriend){
                         friendShipCount++;
@@ -31,7 +31,7 @@ friendsIo.on('connect', async (socket) =>{
                     newChangeStream.on('change', async data => {
                             const newFriend = await FriendShip.findById(ObjectId(data.fullDocument._id)).populate({
                                 path: 'recipient',
-                                select: '-confirmed -friends -password -__v'
+                                select: '-confirmed -friends -password -forgetCode -forgetCodeExpires -__v'
                             }).select('-__v -status').exec();
                             if(newFriend){
                                 friendShipCount++;
@@ -158,7 +158,7 @@ friendShipController.get('/friends', async (req,res,next)=>{
                 {"requester": ObjectId(req.user)},
                 {"status":  3 }
             ]}, {select: '-requester -__v -status', limit: currentLimit, page: currentPage,populate: { path: 'recipient',
-                select: '-confirmed -password -__v -_id -friends -avatarId'}}, (err, results)=>{
+                select: '-confirmed -password -__v -_id -friends -forgetCode -forgetCodeExpires -avatarId'}}, (err, results)=>{
             res.status(200).json(results);
         });
     } catch (err) {
@@ -175,12 +175,14 @@ friendShipController.get('/search', async (req,res,next)=>{
     try {
         if(!keyword) return res.status(400).json('please enter your keyword');
        User.paginate({ $text: { $search: keyword} },
-           {select: {score: {$meta: 'textScore'}, confirmed: 0, friends: 0, password: 0, __v: 0},
+           {select: {score: {$meta: 'textScore'}, confirmed: 0, friends: 0, forgetCode: 0, forgetCodeExpires: 0,
+                   verifyCode: 0, verifyCodeExpires: 0, password: 0, __v: 0},
                sort: { score: { $meta: "textScore" }}, limit: currentLimit, page: currentPage}, (err, results)=>{
            if(err) next(err);
            else if(results.total === 0){
                User.paginate({$or: [{name: {$regex: keyword, $options: 'ix'} }, {email: {$regex: keyword, $options: 'ix'} }, {phone: {$regex: keyword, $options: 'ix'} }]},
-                   {select: {confirmed: 0, friends: 0, password: 0, __v: 0, avatarId: 0},
+                   {select: {confirmed: 0, friends: 0,forgetCode: 0, forgetCodeExpires: 0,
+                           verifyCode: 0, verifyCodeExpires: 0, password: 0, __v: 0, avatarId: 0},
                    limit: currentLimit, page: currentPage}, (err, result)=>{
                        if(err) next(err);
                        res.status(200).json(result)
@@ -207,7 +209,7 @@ friendShipController.get('/requests', async (req,res,next)=>{
                 {"requester": ObjectId(req.user)},
                 {"status":  2 }
             ]}, {select: '-requester -__v -status', limit: currentLimit, page: currentPage,populate: { path: 'recipient',
-                select: '-confirmed -password -__v -_id -friends -avatarId'}}, (err, results)=>{
+                select: '-confirmed -password -__v -_id -friends -forgetCode -forgetCodeExpires -avatarId'}}, (err, results)=>{
             res.status(200).json(results);
         });
     } catch (err) {
