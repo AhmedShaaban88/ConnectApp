@@ -17,7 +17,12 @@ loginController.post('/',function (req,res,next) {
             return res.status(404).json({error: "this user does not exist"});
         }
         else if(!user.confirmed){
-            return res.status(400).json({error: "please activate your account first"});
+            return res.status(400).json({
+                user_id: user._id,
+                email: email,
+                phone: phone,
+                message: "please activate your account first"
+            });
         }
         decryptPassword(password, user.password).then(match => {
             if(!match) return res.status(400).json({error: 'password is incorrect'});
