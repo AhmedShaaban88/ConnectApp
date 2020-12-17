@@ -182,7 +182,7 @@ authController.post('/forget-password', function (req,res,next) {
   if(!email && !phone){
     return res.status(400).json({error: 'must send email or phone'});
   }
-  User.findOne({$or:[{email: email}, {phone: phone}]},(err, user) => {
+  User.findOne({$and:[{email: email}, {phone: phone}]},(err, user) => {
     if(err) next(err);
     else if(user === null){
       return res.status(404).json({error: "this user does not exist"});
@@ -191,7 +191,7 @@ authController.post('/forget-password', function (req,res,next) {
       forgetCode: Math.floor(100000 + Math.random() * 900000),
       forgetCodeExpires: Date.now() + 1800000
     };
-    User.updateOne({$or: [{email: email},{ phone: phone}]}, {$set: {forgetCode: verifiedInfo.forgetCode, forgetCodeExpires: verifiedInfo.forgetCodeExpires}}, (err, currentUser) => {
+    User.updateOne({$and: [{email: email},{ phone: phone}]}, {$set: {forgetCode: verifiedInfo.forgetCode, forgetCodeExpires: verifiedInfo.forgetCodeExpires}}, (err, currentUser) => {
       if(err) next(err);
       else if(email){
         sendVerificationEmail(email, verifiedInfo.forgetCode).then(response => {
@@ -230,7 +230,7 @@ authController.post('/reset-password',[
         .status(400)
         .json({ errors: errors.array().map((err) => err.msg) });
   }else{
-    User.findOne({$or: [{email: email}, {phone: phone}]},(err, user) => {
+    User.findOne({$and: [{email: email}, {phone: phone}]},(err, user) => {
       if(err) next(err);
       else if(user === null){
         return res.status(404).json({error: "this user does not exist"});
@@ -241,7 +241,7 @@ authController.post('/reset-password',[
       else if(Date.now() > user.forgetCodeExpires){
         return res.status(400).json({error: "the code is expired"});
       }
-      User.updateOne({$or: [{email: email}, {phone: phone}]}, {$set: {password: password},$unset: {forgetCode: "", forgetCodeExpires: ""}}, (err, currentUser) => {
+      User.updateOne({$and: [{email: email}, {phone: phone}]}, {$set: {password: password},$unset: {forgetCode: "", forgetCodeExpires: ""}}, (err, currentUser) => {
         return res.status(200).json({
           name: user.name,
           email: user.email,
