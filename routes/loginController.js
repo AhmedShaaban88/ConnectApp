@@ -17,7 +17,7 @@ loginController.post('/',function (req,res,next) {
             return res.status(404).json({error: "this user does not exist"});
         }
         else if(!user.confirmed){
-            return res.status(400).json({
+            return res.status(200).json({
                 user_id: user._id,
                 email: email,
                 phone: phone,
