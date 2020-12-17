@@ -242,14 +242,7 @@ authController.post('/reset-password',[
         return res.status(400).json({error: "the code is expired"});
       }
       User.updateOne({$and: [{email: email}, {phone: phone}]}, {$set: {password: password},$unset: {forgetCode: "", forgetCodeExpires: ""}}, (err, currentUser) => {
-        return res.status(200).json({
-          name: user.name,
-          email: user.email,
-          avatar: user.avatar,
-          userId: user._id,
-          phone: user.phone,
-
-        })
+        return res.status(200).json('reset password successfully')
       });
     });
   }
