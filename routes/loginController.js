@@ -74,7 +74,6 @@ loginController.post('/google', (req,res,next) => {
                                 email: user.email,
                                 avatar: user.avatar,
                                 userId: user._id,
-                                method: 'google',
                                 token: token
                             })
                         })
@@ -88,7 +87,6 @@ loginController.post('/google', (req,res,next) => {
                             email: user.email,
                             avatar: user.avatar,
                             userId: user._id,
-                            method: 'google',
                             token: token
                         })
                     })
@@ -129,7 +127,6 @@ loginController.post('/facebook', (req,res,next) => {
                                 email: user.email,
                                 avatar: user.avatar,
                                 userId: user._id,
-                                method: 'facebook',
                                 token: token
                             })
                         })
@@ -143,7 +140,6 @@ loginController.post('/facebook', (req,res,next) => {
                             email: user.email,
                             avatar: user.avatar,
                             userId: user._id,
-                            method: 'facebook',
                             token: token
                         })
                     })
