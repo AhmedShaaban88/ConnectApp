@@ -29,7 +29,9 @@ mongoose.connection.on("error", (err) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: 'https://connectapp.netlify.app/'
+}));
 app.use(compression());
 
 app.use("/api/auth", authController);
