@@ -68,7 +68,8 @@ authController.post(
         sendVerificationEmail(email, obj.verifyCode).then(response => {
           return res.status(200).json({
             message: "Please Verify Your Account",
-            user_id: obj._id
+            user_id: obj._id,
+            email: obj.email
           });
         }).catch(e => {
           next(e)
@@ -78,7 +79,8 @@ authController.post(
           if(err) next(err);
           return res.status(200).json({
             message: "Please Verify Your Account",
-            user_id: obj._id
+            user_id: obj._id,
+            phone: obj.phone
           });
         })
       }
