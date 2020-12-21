@@ -147,15 +147,18 @@ friendShipController.put('/accept', async (req,res,next)=>{
     return res.status(404).json('this relationship not found');
 
 });
-friendShipController.get('/friends', async (req,res,next)=>{
-  let {limit, page} = req.query;
+friendShipController.get('/friends/:id', async (req,res,next)=>{
+    const {id} = req.params;
+    if(!id) return res.status(400).json('User id required');
+    else if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
+    let {limit, page} = req.query;
   let currentPage = parseInt(page);
   let currentLimit = parseInt(limit);
   if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
   if(page < 1 || !Boolean(currentPage)) currentPage =1;
     try {
         FriendShip.paginate({$and:[
-                {"requester": ObjectId(req.user)},
+                {"requester": ObjectId(id)},
                 {"status":  3 }
             ]}, {select: '-requester -__v -status', limit: currentLimit, page: currentPage,populate: { path: 'recipient',
                 select: '-confirmed -password -__v -_id -friends -forgetCode -forgetCodeExpires -avatarId'}}, (err, results)=>{

@@ -86,29 +86,24 @@ profileController.put('/edit',async (req,res,next) =>{
 profileController.get('/view/:id', async (req,res,next)=>{
     const {id} = req.params;
     if(!id) return res.status(400).json('User id required');
+    else if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     try{
-        const user = await User.findById(ObjectId(id), {confirmed: 0, password:0, __v: 0, avatarId: 0, forgetCode: 0 , forgetCodeExpires: 0}).populate({
-            path: 'friends',
-            match: {$and: [{status: {$eq: 3}}, {requester: ObjectId(id)}]},
-            select: '-requester -__v -status',
-            perDocumentLimit: 5,
-            populate: {
-                path: 'recipient',
-                select: '-password -confirmed -friends -forgetCode -forgetCodeExpires -__v -avatarId',
-            }
-        });
-        const friendStatus = await FriendShip.findOne({$and: [{'requester': ObjectId(req.user)},{'recipient': ObjectId(id)}]});
-        res.status(200).json({user, status: friendStatus ? friendStatus.status : 0})
+        const user = await User.findById(ObjectId(id), {confirmed: 0, password:0, __v: 0, avatarId: 0, forgetCode: 0 , forgetCodeExpires: 0, friends: 0});
+        if(!user) return res.status(404).json('user does not exist');
+        else if(user.verifyCode) return res.status(400).json('user is inactive');
+        const editable = String(req.user) === String(id);
+        const friendStatus = !editable ? await FriendShip.findOne({$and: [{'requester': ObjectId(req.user)},{'recipient': ObjectId(id)}]}) : null;
+        res.status(200).json({...user._doc, editable: editable, status: friendStatus ? friendStatus.status : 0})
     }catch (e) {
         next(e);
     }
-
-
 });
+
 profileController.get('/view/:id/posts', (req,res,next)=>{
     let {limit, page} = req.query;
     const {id} = req.params;
     if(!id) return res.status(400).json('User id required');
+    else if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     let currentPage = parseInt(page);
     let currentLimit = parseInt(limit);
     if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
