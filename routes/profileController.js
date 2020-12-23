@@ -49,6 +49,7 @@ profileController.put('/edit',async (req,res,next) =>{
                     return res.status(200).json({
                         userId: user,
                         name: newProfile.name,
+                        avatar: null
                     })
                 }
                 catch (e) {
