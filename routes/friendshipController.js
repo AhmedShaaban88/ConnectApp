@@ -161,7 +161,7 @@ friendShipController.get('/friends/:id', async (req,res,next)=>{
                 {"requester": ObjectId(id)},
                 {"status":  3 }
             ]}, {select: '-requester -__v -status', limit: currentLimit, page: currentPage,populate: { path: 'recipient',
-                select: '-confirmed -password -__v -_id -friends -forgetCode -forgetCodeExpires -avatarId'}}, (err, results)=>{
+                select: '-confirmed -password -__v -friends -forgetCode -forgetCodeExpires -avatarId'}}, (err, results)=>{
             res.status(200).json(results);
         });
     } catch (err) {
