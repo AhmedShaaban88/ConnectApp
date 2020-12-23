@@ -47,7 +47,7 @@ profileController.put('/edit',async (req,res,next) =>{
                     await cloudinary.uploader.destroy(userInfo.avatarId);
                     await User.updateOne({_id: ObjectId(user)}, {$set: {password: newProfile.password, ...newProfile}, $unset: {avatar: 1, avatarId: 1}});
                     return res.status(200).json({
-                        _id: user,
+                        userId: user,
                         name: newProfile.name,
                         avatar: newProfile.avatar
                     })
@@ -72,7 +72,7 @@ profileController.put('/edit',async (req,res,next) =>{
            await User.updateOne({_id: ObjectId(user)},
                 {$set: {password: newProfile.password, ...newProfile}});
             return res.status(200).json({
-                _id: user,
+                userId: user,
                 name: newProfile.name,
                 avatar: newProfile.avatar
             })
