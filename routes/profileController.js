@@ -48,7 +48,8 @@ profileController.put('/edit',async (req,res,next) =>{
                     await User.updateOne({_id: ObjectId(user)}, {$set: {password: newProfile.password, ...newProfile}, $unset: {avatar: 1, avatarId: 1}});
                     return res.status(200).json({
                         userId: user,
-                        name: newProfile.name
+                        name: newProfile.name,
+                        avatar: null
                     })
                 }
                 catch (e) {
