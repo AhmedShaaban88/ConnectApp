@@ -3,7 +3,7 @@ const io = require('socket.io')({
     perMessageDeflate: false
 });
 const auth = ((socket, next) => {
-    const token = socket.handshake.query ? socket.handshake.query.token.split(' ')[1] : null;
+    const token = socket.handshake.query ? socket.handshake.query.token : null;
     if(!token) socket.disconnect();
     jwt.verify(token, process.env.PUBLIC_KEY_TOKEN, {}, function (err, decoded) {
         if(err) {
