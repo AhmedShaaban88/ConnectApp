@@ -202,16 +202,18 @@ friendShipController.get('/search', async (req,res,next)=>{
 
 });
 friendShipController.get('/requests', async (req,res,next)=>{
-    let {limit, page} = req.query;
+    let {limit, page, skip} = req.query;
     let currentPage = parseInt(page);
     let currentLimit = parseInt(limit);
+    let currentSkip = parseInt(skip);
     if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
     if(page < 1 || !Boolean(currentPage)) currentPage =1;
+    if(skip < 0) currentSkip =0;
     try {
         FriendShip.paginate({$and:[
                 {"requester": ObjectId(req.user)},
                 {"status":  2 }
-            ]}, {select: '-requester -__v -status', limit: currentLimit, page: currentPage,populate: { path: 'recipient',
+            ]}, {select: '-requester -__v -status', limit: currentLimit,offset: currentSkip, page: currentPage,populate: { path: 'recipient',
                 select: '-confirmed -password -__v -friends -forgetCode -forgetCodeExpires -avatarId'}}, (err, results)=>{
             res.status(200).json(results);
         });
