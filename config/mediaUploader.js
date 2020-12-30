@@ -7,6 +7,7 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'media',
+        resource_type: "auto"
     },
 });
 const mediaUploader = multer({
