@@ -9,15 +9,15 @@ const {ObjectId} = mongoose.Types;
 
 commentController.get('/:id', async (req,res,next)=>{
     const {id} = req.params;
-    let {limit, page} = req.query;
-    let currentPage = parseInt(page);
+    let {limit, skip} = req.query;
+    let currentSkip = parseInt(skip);
     let currentLimit = parseInt(limit);
     if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
-    if(page < 1|| !Boolean(currentPage)) currentPage =1;
+    if(skip < 0 || !Boolean(currentSkip)) currentSkip =0;
     if(!id) return res.status(400).json('post id is required');
     try{
          Comment.paginate({post: ObjectId(id)},
-             {limit: currentLimit, page: currentPage, select: '-__v -post', sort: {'updated_at': -1},
+             {limit: currentLimit, offset: currentSkip, select: '-__v -post', sort: {'updated_at': -1},
                  populate: {path: 'author', select: '-confirmed -password -__v -avatarId -friends -forgetCode -forgetCodeExpires'}}, (err, comments)=> {
              if(err) next(err);
              res.status(200).json(comments);
