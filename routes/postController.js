@@ -7,6 +7,7 @@ const {ObjectId} = mongoose.Types;
 
 postController.get('/:id', async (req,res, next) =>{
    const {id} = req.params;
+    if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     Post.findById(ObjectId(id), {__v: 0}).populate({path: 'author', select: '-confirmed -password -__v -avatarId -forgetCode -forgetCodeExpires -friends'}).exec((err, post)=>{
         if(err) next(err);
         else if(!post) return res.status(404).json('post does not exist');
@@ -36,6 +37,7 @@ postController.post('/create',
     });
 postController.delete('/:id', async (req,res,next)=>{
     const {id} = req.params;
+    if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     try{
         const post = await Post.findById(ObjectId(id));
         if(!post) return res.status(404).json('post does not exist');
@@ -53,6 +55,7 @@ postController.delete('/:id', async (req,res,next)=>{
 postController.put('/:id',
     async (req,res,next) =>{
         const {id} = req.params;
+        if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
         const post = await Post.findById(ObjectId(id));
         req.post = post;
         if(!post) return res.status(404).json('post does not exist');

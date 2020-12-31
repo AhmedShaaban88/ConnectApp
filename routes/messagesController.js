@@ -47,7 +47,8 @@ messagesController.post('/send-message/:id',
     messageUploader.array('media') ,
     async (req,res,next) => {
     const {id} = req.params;
-    const {content} = req.body;
+        if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
+        const {content} = req.body;
     if(!content && !req.files) return res.status(400).json('must sent text or media files');
     const friendId = ObjectId(id);
     const userId = ObjectId(req.user);

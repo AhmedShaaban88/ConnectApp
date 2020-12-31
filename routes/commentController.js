@@ -9,6 +9,7 @@ const {ObjectId} = mongoose.Types;
 
 commentController.get('/:id', async (req,res,next)=>{
     const {id} = req.params;
+    if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     let {limit, skip} = req.query;
     let currentSkip = parseInt(skip);
     let currentLimit = parseInt(limit);
@@ -30,6 +31,7 @@ commentController.get('/:id', async (req,res,next)=>{
 commentController.put('/:id',
     async (req,res,next) =>{
         const {id} = req.params;
+        if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
         const post = await Post.findById(ObjectId(id));
         if(!post) return res.status(404).json('post does not exist');
         else next();
@@ -74,6 +76,7 @@ commentController.put('/:id',
     });
 commentController.delete('/:id', async (req, res, next) => {
     const {id} = req.params;
+    if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     const {commentId} = req.body;
     const post = await Post.findById(ObjectId(id));
     if (!post) return res.status(404).json('post does not exist');
@@ -105,6 +108,7 @@ commentController.put('/edit/:id/:commentId',
     async (req, res, next) => {
     try{
         const {id, commentId} = req.params;
+        if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
         const {content, deletedFiles} = req.body;
         const {comment} =req;
         if(!content && !req.files) return res.status(400).json('must sent text or media files');
