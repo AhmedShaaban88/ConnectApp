@@ -119,6 +119,7 @@ commentController.delete('/:id', async (req, res, next) => {
 commentController.put('/edit/:id/:commentId',
     async (req,res,next) =>{
         const {commentId} = req.params;
+        if(!ObjectId.isValid(commentId)) return res.status(400).json('comment id is not valid');
         const comment = await Comment.findOne({$and:[{_id: ObjectId(commentId)}, {author: ObjectId(req.user)}]});
         req.comment = comment;
         if(!comment) return res.status(404).json('comment does not exist');
