@@ -39,10 +39,7 @@ commentController.get('/:postId/:id',  async (req,res,next) => {
     if(!ObjectId.isValid(postId)) return res.status(400).json('post id is not valid');
     if(!ObjectId.isValid(id)) return res.status(400).json('comment id is not valid');
     try{
-        Comment.findOne({$and: [{_id: ObjectId(id)}, {post: ObjectId(postId)}]}).populate({
-            path: 'post',
-            select: '-content -_id -__v -media -likes -comments -posted_at -updated_at'
-        }).exec(function (err, comment){
+        Comment.findOne({$and: [{_id: ObjectId(id)}, {post: ObjectId(postId)}]}, (err, comment) => {
                 if(err) next(err);
                 else if(!comment) return res.status(404).json('comment does not exist');
                 return res.status(200).json(comment);
