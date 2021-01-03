@@ -73,8 +73,8 @@ commentController.put('/:id',
                     } catch (e) {
                         next(e)
                     }
-                    return res.status(200).json(comment);
                 }
+                return res.status(200).json(comment);
             });
         });
     });
