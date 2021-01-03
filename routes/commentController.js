@@ -18,8 +18,12 @@ commentController.get('/:id', async (req,res,next)=>{
     if(!id) return res.status(400).json('post id is required');
     try{
          Comment.paginate({post: ObjectId(id)},
-             {limit: currentLimit, offset: currentSkip, select: '-__v -post', sort: {'updated_at': -1},
-                 populate: {path: 'author', select: '-confirmed -password -__v -avatarId -friends -forgetCode -forgetCodeExpires'}}, (err, comments)=> {
+             {limit: currentLimit, offset: currentSkip, select: '-__v', sort: {'updated_at': -1},
+                 populate: [{
+                 path: 'author', select: '-confirmed -password -__v -avatarId -friends -forgetCode -forgetCodeExpires',
+             },{
+                 path: 'post', select: '-content -_id -__v -media -likes -comments -posted_at -updated_at'
+                 }]}, (err, comments)=> {
              if(err) next(err);
              res.status(200).json(comments);
              })
