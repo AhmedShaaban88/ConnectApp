@@ -30,13 +30,11 @@ dashboardIo.on('connect', async (socket) =>{
 });
 
 dashboardController.get('/', async (req,res,next)=>{
-    const {page, limit, skip} = req.query;
-    let currentPage = parseInt(page);
+    const {limit, skip} = req.query;
     let currentLimit = parseInt(limit);
     let currentSkip = parseInt(skip);
-    if(limit < 10) currentLimit =10;
-    if(page < 1) currentPage =1;
-    if(skip < 0) currentSkip =0;
+    if(limit < 8 || !Boolean(currentLimit)) currentLimit =8;
+    if(skip < 0 || !Boolean(currentSkip)) currentSkip =0;
     const posts = Posts.aggregate([
         {$lookup: {
                 from: 'FriendShip',
@@ -59,7 +57,7 @@ dashboardController.get('/', async (req,res,next)=>{
         {$unwind: '$author'},
         {$project: {'author.__v': 0, 'author.friends': 0, 'author.confirmed': 0, 'author.password': 0, 'author.avatarId': 0, 'author.forgetCode': 0, 'author.forgetCodeExpires': 0}}
     ]);
-    Posts.aggregatePaginate(posts, {limit: currentLimit, page: currentPage, offset: currentSkip, sort: {'updated_at': -1}}, (err, result) =>{
+    Posts.aggregatePaginate(posts, {limit: currentLimit, offset: currentSkip, sort: {'updated_at': -1}}, (err, result) =>{
         if(err) next(err);
         res.status(200).json(result)
     })
