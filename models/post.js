@@ -4,7 +4,7 @@ const mongoosePaginate = require('mongoose-paginate');
 const aggregatePaginate = require('mongoose-aggregate-paginate-v2');
 const postSchema = new Schema({
     author: {type: Schema.Types.ObjectId, ref: 'User'},
-    content: {type: String, required: true},
+    content: {type: String},
     media: [{type: mediaSchema}],
     likes: [{type: Schema.Types.ObjectId, ref: 'User'}],
     comments: [{type: Schema.Types.ObjectId, ref: 'Comment'}]
