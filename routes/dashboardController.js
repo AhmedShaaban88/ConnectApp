@@ -22,6 +22,7 @@ dashboardIo.on('connect', async (socket) =>{
                     });
                 }
             }
+            socket.on('seen', () => socket.emit('seen all', 0));
         }catch (e) {
             socket.disconnect()
         }
