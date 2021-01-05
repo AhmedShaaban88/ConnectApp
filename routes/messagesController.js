@@ -118,13 +118,11 @@ messagesController.get('/rooms', async (req,res,next)=>{
 
 messagesController.get('/:id', async (req,res,next)=>{
     const {id} = req.params;
-    let {limit, page, skip} = req.query;
-    let currentPage = parseInt(page);
+    let {limit, skip} = req.query;
     let currentLimit = parseInt(limit);
     let currentSkip = parseInt(skip);
     if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
-    if(page < 1 || !Boolean(currentPage)) currentPage =1;
-    if(skip < 0) currentSkip =0;
+    if(skip < 0 || !Boolean(currentSkip)) currentSkip =0;
     if(!ObjectId.isValid(id) || !id) return res.status(400).json('id is not valid');
     const friendId = ObjectId(id);
     const friend = await User.findById(friendId);
@@ -147,7 +145,7 @@ messagesController.get('/:id', async (req,res,next)=>{
                   });
                   try {
                       const messages =  await Message.paginate({roomId: ObjectId(newRoomDoc._id)},
-                          {select: '-__v -updatedAt', limit: currentLimit, page: currentPage,
+                          {select: '-__v -updatedAt', limit: currentLimit,
                               offset: currentSkip,
                               sort: {'delivered_at': -1}});
                       return res.status(200).json({...messages, roomId: newRoomDoc._id, friend: roomDoc.participants[0]});
@@ -157,7 +155,7 @@ messagesController.get('/:id', async (req,res,next)=>{
               }else{
                   try {
                      const messages =  await Message.paginate({roomId: ObjectId(room._id)},
-                         {select: '-__v -updatedAt', limit: currentLimit, page: currentPage,
+                         {select: '-__v -updatedAt', limit: currentLimit,
                              offset: currentSkip,
                              sort: {'delivered_at': -1}});
                      return res.status(200).json({...messages, roomId: room._id, friend: room.participants[0]});
