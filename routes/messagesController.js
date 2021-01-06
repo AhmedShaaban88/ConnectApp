@@ -125,7 +125,7 @@ messagesController.get('/:id', async (req,res,next)=>{
     if(skip < 0 || !Boolean(currentSkip)) currentSkip =0;
     if(!ObjectId.isValid(id) || !id) return res.status(400).json('id is not valid');
     const friendId = ObjectId(id);
-    const friend = await User.findById(friendId);
+    const friend = await User.findById(friendId).select('-confirmed -friends -password -forgetCode -forgetCodeExpires -__v');
     if(!friend) return res.status(404).json('this user does not exist');
     const userId = ObjectId(req.user);
     if(String(id) === String(req.user)) return res.status(400).json('you can not chat with yourself');
@@ -147,7 +147,7 @@ messagesController.get('/:id', async (req,res,next)=>{
                          {select: '-__v -updatedAt', limit: currentLimit,
                              offset: currentSkip,
                              sort: {'delivered_at': -1}});
-                     return res.status(200).json(messages);
+                     return res.status(200).json({...messages, friend: friend});
                   } catch (err) {
                       next(err)
                   }
