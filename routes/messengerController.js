@@ -26,6 +26,7 @@ messengerIo.on('connect', async (socket) =>{
         });
     });
     socket.on('typing', room => socket.broadcast.to(room).emit('user typing', `typing...`));
+    socket.on('stop typing', room => socket.broadcast.to(room).emit('stop user typing', `stop`));
     socket.on('send message', (message) => {
         socket.broadcast.to(String(message.roomId)).emit('new message', message)
     });
