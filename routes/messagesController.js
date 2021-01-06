@@ -129,26 +129,15 @@ messagesController.get('/:id', async (req,res,next)=>{
     if(!friend) return res.status(404).json('this user does not exist');
     const userId = ObjectId(req.user);
     if(String(id) === String(req.user)) return res.status(400).json('you can not chat with yourself');
-    const room = await Room.findOne({participants: {$all: [userId, friendId]}}).select({participants: {$elemMatch: {$ne: req.user}}}).populate({
-        path: 'participants',
-        select: '-confirmed -password -__v -friends -forgetCode -forgetCodeExpires -avatarId'
-    });
+    const room = await Room.findOne({participants: {$all: [userId, friendId]}});
               if(!room){
                   const newRoom = new Room({
                       participants: [friendId, userId]
                   });
                   const newRoomDoc = await newRoom.save();
                   if(!newRoomDoc) next(new Error('something wrong when trying to save the chat room'));
-                  const roomDoc = await Room.findById(ObjectId(newRoomDoc._id)).select({participants: {$elemMatch: {$ne: req.user}}}).populate({
-                      path: 'participants',
-                      select: '-confirmed -password -__v -friends -forgetCode -forgetCodeExpires -avatarId'
-                  });
                   try {
-                      const messages =  await Message.paginate({roomId: ObjectId(newRoomDoc._id)},
-                          {select: '-__v -updatedAt', limit: currentLimit,
-                              offset: currentSkip,
-                              sort: {'delivered_at': -1}});
-                      return res.status(200).json({...messages, roomId: newRoomDoc._id, friend: roomDoc.participants[0]});
+                      return res.status(200).json('create room successfully');
                   } catch (err) {
                       next(err)
                   }
@@ -158,7 +147,7 @@ messagesController.get('/:id', async (req,res,next)=>{
                          {select: '-__v -updatedAt', limit: currentLimit,
                              offset: currentSkip,
                              sort: {'delivered_at': -1}});
-                     return res.status(200).json({...messages, roomId: room._id, friend: room.participants[0]});
+                     return res.status(200).json(messages);
                   } catch (err) {
                       next(err)
                   }
