@@ -144,10 +144,10 @@ messagesController.get('/:id', async (req,res,next)=>{
               }else{
                   try {
                      const messages =  await Message.paginate({roomId: ObjectId(room._id)},
-                         {select: '-__v -updatedAt', limit: currentLimit,
+                         {select: '-__v -updatedAt -roomId', limit: currentLimit,
                              offset: currentSkip,
                              sort: {'delivered_at': -1}});
-                     return res.status(200).json({...messages, friend: friend});
+                     return res.status(200).json({...messages, friend: friend, roomId: room._id});
                   } catch (err) {
                       next(err)
                   }
