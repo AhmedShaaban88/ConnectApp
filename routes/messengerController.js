@@ -30,7 +30,7 @@ messengerIo.on('connect', async (socket) =>{
     socket.on('send message', (message) => {
         socket.broadcast.to(String(message.roomId)).emit('new message', message)
     });
-    socket.on('seen message', message => socket.broadcast.to(String(message.roomId)).emit('seen', ({id: message._id, user: socket.userId})));
+    socket.on('seen message', message => socket.to(String(message.roomId)).emit('seen', ({id: message._id, user: socket.userId})));
     let roomsNotify = Room.watch([ { $match : {$and:[{"operationType" : "update" }, {'fullDocument.participants': {$in: [ObjectId(socket.userId)]}}]}}], { fullDocument : "updateLookup" });
     roomsNotify.once('change', async next => {
         try {
