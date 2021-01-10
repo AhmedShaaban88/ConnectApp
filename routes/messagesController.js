@@ -97,13 +97,13 @@ messagesController.put('/seen/:id', async (req,res,next)=>{
 
 });
 messagesController.get('/rooms', async (req,res,next)=>{
-    let {limit, page} = req.query;
-    let currentPage = parseInt(page);
+    let {limit, skip} = req.query;
+    let currentSkip = parseInt(skip);
     let currentLimit = parseInt(limit);
     if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
-    if(page < 1 || !Boolean(currentPage)) currentPage =1;
+    if(skip < 0 || !Boolean(currentSkip)) currentSkip =0;
     const rooms = await Room.paginate({participants: {$in: [req.user]}},
-        {limit: currentLimit, page: currentPage,
+        {limit: currentLimit, offset: currentSkip,
             sort: {updatedAt: -1},
             select: {participants: {$elemMatch: {$ne: req.user}}},
             populate: [{
