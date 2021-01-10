@@ -14,10 +14,10 @@ messageIo.on('connect', async (socket) =>{
     socket.emit('count', unreadMessages);
     const newMessageNotifiy = Message.watch([ { $match : {$and:[
         {$or: [{"operationType" : "insert"}, {"operationType" : "update"}]}
-        , {'fullDocument.receiver': ObjectId(socket.userId)}] } }, {$project: {count: {$cond: [{'operationTypes': 'insert'}, +1, -1]}}}], { fullDocument : "updateLookup" });
+        , {'fullDocument.receiver': ObjectId(socket.userId)}] } }], { fullDocument : "updateLookup" });
     newMessageNotifiy.once('change', async next => {
         try {
-            if(next.count === 1){
+            if(next.operationType === 'insert'){
                 unreadMessages++;
             }else if(unreadMessages > 0){
                 unreadMessages--;
@@ -28,9 +28,10 @@ messageIo.on('connect', async (socket) =>{
                     newMessageNotifiy.close();
                     const newChangeStream = Message.watch([ { $match : {$and:[
                                 {$or: [{"operationType" : "insert"}, {"operationType" : "update"}]}
-                                , {'fullDocument.receiver': ObjectId(socket.userId)}] } }, {$project: {count: {$cond: [{'operationType': 'insert'}, -1, +1]}}}], { fullDocument : "updateLookup" });
+                                , {'fullDocument.receiver': ObjectId(socket.userId)}] } }], { fullDocument : "updateLookup" });
+
                     newChangeStream.on('change', async data => {
-                        if(data.count === 1){
+                        if(data.operationType === 'insert'){
                             unreadMessages++;
                         }else if(unreadMessages > 0){
                             unreadMessages--;
