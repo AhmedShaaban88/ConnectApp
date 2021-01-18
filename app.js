@@ -35,8 +35,8 @@ app.use(cors());
 app.use(compression());
 app.set('trust proxy', 1);
 const apiLoginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
+  windowMs: 20 * 60 * 1000,
+  max: 50,
 });
 app.use("/api/auth", apiLoginLimiter, authController);
 app.use("/api", authorizedUser, protectedController);
