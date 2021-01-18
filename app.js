@@ -9,6 +9,8 @@ const catchError = require("./middleware/catchError");
 const authController = require("./routes/authController");
 const protectedController = require("./routes/protectedController");
 const authorizedUser = require("./middleware/authorizedUser");
+const rateLimit = require("express-rate-limit");
+
 
 const app = express();
 mongoose.connect(process.env.DB_URL, {
@@ -31,8 +33,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(helmet());
 app.use(cors());
 app.use(compression());
-
-app.use("/api/auth", authController);
+app.set('trust proxy', 1);
+const apiLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+});
+app.use("/api/auth", apiLoginLimiter, authController);
 app.use("/api", authorizedUser, protectedController);
 app.use(function (req, res, next) {
   next(createError(404));
