@@ -11,7 +11,6 @@ const protectedController = require("./routes/protectedController");
 const authorizedUser = require("./middleware/authorizedUser");
 const rateLimit = require("express-rate-limit");
 
-
 const app = express();
 mongoose.connect(process.env.DB_URL, {
   autoIndex: false,
@@ -21,11 +20,11 @@ mongoose.connect(process.env.DB_URL, {
   useFindAndModify: false,
   poolSize: 100
 });
-mongoose.connection.on("open", () => {
-  console.log("connected to db");
-});
+
 mongoose.connection.on("error", (err) => {
-  console.log(err.message);
+  mongoose.disconnect();
+  mongoose.connection.close();
+  catchError({status: 500, message: 'Database connection failed'});
 });
 
 app.use(express.json());
