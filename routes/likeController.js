@@ -8,7 +8,7 @@ const {ObjectId} = mongoose.Types;
 likeController.put('/post/:id', async (req,res,next)=>{
     const {id} = req.params;
     const {user} = req;
-    const post = await Post.findById(ObjectId(id)).lean();
+    const post = await Post.findById(ObjectId(id));
     if(!post) return res.status(404).json('post does not exist');
     if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     else if(post.likes.indexOf(user) > -1){
