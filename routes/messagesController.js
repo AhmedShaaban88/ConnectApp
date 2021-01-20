@@ -53,7 +53,7 @@ messagesController.post('/send-message/:id',
     if(!content && !req.files) return res.status(400).json('must sent text or media files');
     const friendId = ObjectId(id);
     const userId = ObjectId(req.user);
-    const room = await Room.findOne({participants: {$all: [userId, friendId]}});
+    const room = await Room.findOne({participants: {$all: [userId, friendId]}}).lean();
     if(!room) return res.status(404).json('no room between these users');
     const message = new Message({
         sender: userId,
@@ -126,11 +126,11 @@ messagesController.get('/:id', async (req,res,next)=>{
     if(skip < 0 || !Boolean(currentSkip)) currentSkip =0;
     if(!ObjectId.isValid(id) || !id) return res.status(400).json('id is not valid');
     const friendId = ObjectId(id);
-    const friend = await User.findById(friendId).select('-confirmed -friends -password -forgetCode -forgetCodeExpires -__v');
+    const friend = await User.findById(friendId).select('-confirmed -friends -password -forgetCode -forgetCodeExpires -__v').lean();
     if(!friend) return res.status(404).json('this user does not exist');
     const userId = ObjectId(req.user);
     if(String(id) === String(req.user)) return res.status(400).json('you can not chat with yourself');
-    const room = await Room.findOne({participants: {$all: [userId, friendId]}});
+    const room = await Room.findOne({participants: {$all: [userId, friendId]}}).lean();
               if(!room){
                   const newRoom = new Room({
                       participants: [friendId, userId]

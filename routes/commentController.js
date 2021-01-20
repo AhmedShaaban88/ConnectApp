@@ -39,7 +39,7 @@ commentController.get('/:postId/:id',  async (req,res,next) => {
     if(!ObjectId.isValid(postId)) return res.status(400).json('post id is not valid');
     if(!ObjectId.isValid(id)) return res.status(400).json('comment id is not valid');
     try{
-        Comment.findOne({$and: [{_id: ObjectId(id)}, {post: ObjectId(postId)}]}, (err, comment) => {
+        Comment.findOne({$and: [{_id: ObjectId(id)}, {post: ObjectId(postId)}]}).lean().exec((err, comment) => {
                 if(err) next(err);
                 else if(!comment) return res.status(404).json('comment does not exist');
                 return res.status(200).json(comment);
@@ -52,7 +52,7 @@ commentController.put('/:id',
     async (req,res,next) =>{
         const {id} = req.params;
         if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
-        const post = await Post.findById(ObjectId(id));
+        const post = await Post.findById(ObjectId(id)).lean();
         if(!post) return res.status(404).json('post does not exist');
         else next();
     },
@@ -98,9 +98,9 @@ commentController.delete('/:id', async (req, res, next) => {
     const {id} = req.params;
     if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     const {commentId} = req.body;
-    const post = await Post.findById(ObjectId(id));
+    const post = await Post.findById(ObjectId(id)).lean();
     if (!post) return res.status(404).json('post does not exist');
-    const comment = await Comment.findById(ObjectId(commentId));
+    const comment = await Comment.findById(ObjectId(commentId)).lean();
     if(!comment) return res.status(404).json('comment does not exist');
     if (String(req.user) !== String(post.author) && String(req.user) !== String(comment.author))
         return res.status(403).json('forbidden');
@@ -120,7 +120,7 @@ commentController.put('/edit/:id/:commentId',
     async (req,res,next) =>{
         const {commentId} = req.params;
         if(!ObjectId.isValid(commentId)) return res.status(400).json('comment id is not valid');
-        const comment = await Comment.findOne({$and:[{_id: ObjectId(commentId)}, {author: ObjectId(req.user)}]});
+        const comment = await Comment.findOne({$and:[{_id: ObjectId(commentId)}, {author: ObjectId(req.user)}]}).lean();
         req.comment = comment;
         if(!comment) return res.status(404).json('comment does not exist');
         else next();
@@ -132,6 +132,7 @@ commentController.put('/edit/:id/:commentId',
         if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
         const {content, deletedFiles} = req.body;
         const {comment} =req;
+        console.log(comment)
         if(!content && !req.files) return res.status(400).json('must sent text or media files');
         if (deletedFiles && deletedFiles.length > 0) {
             deletedFiles.map(media => {

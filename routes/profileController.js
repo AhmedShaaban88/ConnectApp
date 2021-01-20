@@ -11,7 +11,7 @@ const {ObjectId} = mongoose.Types;
 
 profileController.put('/edit',async (req,res,next) =>{
         const {user} = req;
-        const userInfo = await User.findById(ObjectId(user));
+        const userInfo = await User.findById(ObjectId(user)).lean();
         req.userInfo = userInfo;
         if(!userInfo) return res.status(404).json('user does not exist');
         else next();
@@ -88,11 +88,11 @@ profileController.get('/view/:id', async (req,res,next)=>{
     if(!id) return res.status(400).json('User id required');
     else if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     try{
-        const user = await User.findById(ObjectId(id), {confirmed: 0, password:0, __v: 0, avatarId: 0, forgetCode: 0 , forgetCodeExpires: 0, friends: 0});
+        const user = await User.findById(ObjectId(id), {confirmed: 0, password:0, __v: 0, avatarId: 0, forgetCode: 0 , forgetCodeExpires: 0, friends: 0}).lean();
         if(!user) return res.status(404).json('user does not exist');
         else if(user.verifyCode) return res.status(400).json('user is inactive');
         const editable = String(req.user) === String(id);
-        const friendStatus = !editable ? await FriendShip.findOne({$and: [{'requester': ObjectId(req.user)},{'recipient': ObjectId(id)}]}) : null;
+        const friendStatus = !editable ? await FriendShip.findOne({$and: [{'requester': ObjectId(req.user)},{'recipient': ObjectId(id)}]}).lean() : null;
         res.status(200).json({...user._doc, editable: editable, status: friendStatus ? friendStatus.status : 0})
     }catch (e) {
         next(e);

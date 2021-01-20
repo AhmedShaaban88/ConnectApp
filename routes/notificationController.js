@@ -10,7 +10,7 @@ notificationsIo.on('connect', async (socket) =>{
     socket.emit('count', notificationCount);
     const postNotifiy = Notification.watch([ { $match : {$and: [{"operationType" : "insert" }, {'fullDocument.receiver': ObjectId(socket.userId)}]} }], { fullDocument : "updateLookup" });
     postNotifiy.once('change', async next => {
-       const notification =  await Notification.findById(ObjectId(next.fullDocument._id)).populate({
+       const notification =  await Notification.findById(ObjectId(next.fullDocument._id)).lean().populate({
             path: 'by',
             select: '-confirmed -friends -password -forgetCode -forgetCodeExpires -__v'
         }).select('-__v -updatedAt -expires').exec();
@@ -23,7 +23,7 @@ notificationsIo.on('connect', async (socket) =>{
                     postNotifiy.close();
                     const newChangeStream = Notification.watch([ { $match : {$and: [{"operationType" : "insert" }, {'fullDocument.receiver': ObjectId(socket.userId)}]}}], { fullDocument : "updateLookup", startAfter: resumeToken });
                     newChangeStream.on('change', async data => {
-                        const newNotification = await Notification.findById(ObjectId(data.fullDocument._id)).populate({
+                        const newNotification = await Notification.findById(ObjectId(data.fullDocument._id)).lean().populate({
                             path: 'by',
                             select: '-confirmed -friends -password -forgetCode -forgetCodeExpires -__v'
                         }).select('-__v -updatedAt -expires').exec();

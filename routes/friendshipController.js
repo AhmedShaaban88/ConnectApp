@@ -17,7 +17,7 @@ friendsIo.on('connect', async (socket) =>{
         try {
                 const resumeToken = next._id;
                 if (resumeToken) {
-                    const newFriend = await FriendShip.findById(ObjectId(next.fullDocument._id)).populate({
+                    const newFriend = await FriendShip.findById(ObjectId(next.fullDocument._id)).lean().populate({
                         path: 'recipient',
                         select: '-confirmed -friends -password -forgetCode -forgetCodeExpires -__v'
                     }).select('-__v -status').exec();
@@ -29,7 +29,7 @@ friendsIo.on('connect', async (socket) =>{
                     newFriendNotifiy.close();
                     const newChangeStream = FriendShip.watch([ {$match: {$and:[{"operationType" : "insert"}, {'fullDocument.status': 2}, {'fullDocument.requester': ObjectId(socket.userId)}] }}], { fullDocument : "updateLookup", startAfter: resumeToken });
                     newChangeStream.on('change', async data => {
-                            const newFriend = await FriendShip.findById(ObjectId(data.fullDocument._id)).populate({
+                            const newFriend = await FriendShip.findById(ObjectId(data.fullDocument._id)).lean().populate({
                                 path: 'recipient',
                                 select: '-confirmed -friends -password -forgetCode -forgetCodeExpires -__v'
                             }).select('-__v -status').exec();
@@ -117,7 +117,7 @@ friendShipController.put('/accept', async (req,res,next)=>{
     else if(requester === recipient) return res.status(409).json('you can not accept yourself');
     const friendShipDoc = await FriendShip.findOne(
         {requester: ObjectId(requester), recipient: ObjectId(recipient), status: 2}
-        );
+        ).lean();
     if(friendShipDoc){
         try {
             await FriendShip.findOneAndUpdate(

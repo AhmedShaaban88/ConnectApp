@@ -90,7 +90,7 @@ authController.post(
 
 authController.post('/verify-account', function (req, res, next) {
   const {code, userId} = req.body;
-  User.findById(ObjectId(userId),(err, user) => {
+  User.findById(ObjectId(userId)).lean().exec((err, user) => {
     if(err) next(err);
     else if(user === null){
       return res.status(404).json({error: "this user does not exist"})
@@ -123,7 +123,7 @@ authController.post('/verify-account', function (req, res, next) {
 });
 authController.post('/resend-verification-email', function (req, res, next) {
   const {email} = req.body;
-  User.findOne({email: email},(err, user) => {
+  User.findOne({email: email}).lean().exec((err, user) => {
     if(err) next(err);
     else if(user === null){
       return res.status(404).json({error: "this user does not exist"});
@@ -151,7 +151,7 @@ authController.post('/resend-verification-email', function (req, res, next) {
 });
 authController.post('/resend-verification-mobile', function (req, res, next) {
   const {phone} = req.body;
-  User.findOne({phone: phone},(err, user) => {
+  User.findOne({phone: phone}).lean().exec((err, user) => {
     if (err) next(err);
     else if (user === null) {
       return res.status(404).json({error: "this user does not exist"});
@@ -184,7 +184,7 @@ authController.post('/forget-password', function (req,res,next) {
   if(!email && !phone){
     return res.status(400).json({error: 'must send email or phone'});
   }
-  User.findOne({$and:[{email: email}, {phone: phone}]},(err, user) => {
+  User.findOne({$and:[{email: email}, {phone: phone}]}).lean().exec((err, user) => {
     if(err) next(err);
     else if(user === null){
       return res.status(404).json({error: "this user does not exist"});
@@ -232,7 +232,7 @@ authController.post('/reset-password',[
         .status(400)
         .json({ errors: errors.array().map((err) => err.msg) });
   }else{
-    User.findOne({$and: [{email: email}, {phone: phone}]},(err, user) => {
+    User.findOne({$and: [{email: email}, {phone: phone}]}).lean().exec((err, user) => {
       if(err) next(err);
       else if(user === null){
         return res.status(404).json({error: "this user does not exist"});

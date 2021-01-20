@@ -8,7 +8,7 @@ const {ObjectId} = mongoose.Types;
 likeController.put('/post/:id', async (req,res,next)=>{
     const {id} = req.params;
     const {user} = req;
-    const post = await Post.findById(ObjectId(id));
+    const post = await Post.findById(ObjectId(id)).lean();
     if(!post) return res.status(404).json('post does not exist');
     if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     else if(post.likes.indexOf(user) > -1){
@@ -23,7 +23,7 @@ likeController.put('/post/:id', async (req,res,next)=>{
             else if(String(post.author) !== String(user)){
                 try{
                     const duplicateNotification = await Notification.findOne(
-                        {$and: [{by: ObjectId(user)}, {post: ObjectId(id)}, {type: 'like'}]});
+                        {$and: [{by: ObjectId(user)}, {post: ObjectId(id)}, {type: 'like'}]}).lean();
                     if(!duplicateNotification){
                         const notification = new Notification({
                             receiver: ObjectId(post.author),
@@ -49,7 +49,7 @@ likeController.put('/post/:id', async (req,res,next)=>{
 likeController.get('/:id', async (req,res,next)=>{
     const {id} = req.params;
     if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
-        Post.findById(ObjectId(id)).populate({path: 'likes', select: '-confirmed -password -__v, -friends -forgetCode -forgetCodeExpires -avatarId'}).exec((err, post)=>{
+        Post.findById(ObjectId(id)).lean().populate({path: 'likes', select: '-confirmed -password -__v, -friends -forgetCode -forgetCodeExpires -avatarId'}).exec((err, post)=>{
             if(err) next(err);
             else if(!post) return res.status(404).json('post does not exist');
             res.status(200).json(post.likes);

@@ -11,7 +11,7 @@ loginController.post('/',function (req,res,next) {
     if(!email && !phone){
         return res.status(400).json({error: 'must send email or phone'});
     }
-    User.findOne({$and:[{email: email}, {phone: phone}]},(err, user) => {
+    User.findOne({$and:[{email: email}, {phone: phone}]}).lean().exec((err, user) => {
         if(err) next(err);
         else if(user === null){
             return res.status(404).json({error: "this user does not exist"});
@@ -51,7 +51,7 @@ loginController.post('/google', (req,res,next) => {
         const {email, email_verified, name, picture} = result.payload;
         if(!email_verified) return res.status(400).json('please verify email from google side first');
         else{
-            User.findOne({email: email}, (err, user) => {
+            User.findOne({email: email}).lean().exec((err, user) => {
                 if(err) next(err);
                 else if(!user) {
                     const newUser = new User({
@@ -104,7 +104,7 @@ loginController.post('/facebook', (req,res,next) => {
     }).then(res => res.json())
         .then(jsonRes => {
             const {name, email, picture} = jsonRes;
-            User.findOne({email: email}, (err, user) => {
+            User.findOne({email: email}).lean().exec((err, user) => {
                 if(err) next(err);
                 else if(!user) {
                     const newUser = new User({

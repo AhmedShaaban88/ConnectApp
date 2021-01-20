@@ -34,7 +34,7 @@ messengerIo.on('connect', async (socket) =>{
     let roomsNotify = Room.watch([ { $match : {$and:[{"operationType" : "update" }, {'fullDocument.participants': {$in: [ObjectId(socket.userId)]}}]}}], { fullDocument : "updateLookup" });
     roomsNotify.once('change', async next => {
         try {
-                const lastMessage = await Room.findById(ObjectId(next.fullDocument._id)).populate({
+                const lastMessage = await Room.findById(ObjectId(next.fullDocument._id)).lean().populate({
                     path: 'participants',
                     match: {_id: {$ne: userId}},
                     select: '-confirmed -password -__v -friends -avatarId -forgetCode -forgetCodeExpires'
@@ -48,7 +48,7 @@ messengerIo.on('connect', async (socket) =>{
                     roomsNotify.close();
                     const newChangeStream = Room.watch([ { $match : {$and:[{"operationType" : "update" }, {'fullDocument.participants': {$in: [ObjectId(socket.userId)]}}]}}], { fullDocument : "updateLookup", startAfter: resumeToken });
                     newChangeStream.on('change', async data => {
-                            const lastMessage = await Room.findById(ObjectId(data.fullDocument._id)).populate({
+                            const lastMessage = await Room.findById(ObjectId(data.fullDocument._id)).lean().populate({
                                 path: 'participants',
                                 match: {_id: {$ne: userId}},
                                 select: '-confirmed -password -__v -friends -avatarId -forgetCode -forgetCodeExpires'

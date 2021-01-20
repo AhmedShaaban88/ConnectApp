@@ -8,7 +8,7 @@ const {ObjectId} = mongoose.Types;
 postController.get('/:id', async (req,res, next) =>{
    const {id} = req.params;
     if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
-    Post.findById(ObjectId(id), {__v: 0}).populate({path: 'author', select: '-confirmed -password -__v -avatarId -forgetCode -forgetCodeExpires -friends'}).exec((err, post)=>{
+    Post.findById(ObjectId(id), {__v: 0}).lean().populate({path: 'author', select: '-confirmed -password -__v -avatarId -forgetCode -forgetCodeExpires -friends'}).exec((err, post)=>{
         if(err) next(err);
         else if(!post) return res.status(404).json('post does not exist');
        return res.status(200).json(post);
@@ -39,7 +39,7 @@ postController.delete('/:id', async (req,res,next)=>{
     const {id} = req.params;
     if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
     try{
-        const post = await Post.findById(ObjectId(id));
+        const post = await Post.findById(ObjectId(id)).lean();
         if(!post) return res.status(404).json('post does not exist');
         else if(String(req.user) !== String(post.author)) return res.status(403).json('forbidden');
         if(post.media.length > 0){
@@ -56,7 +56,7 @@ postController.put('/:id',
     async (req,res,next) =>{
         const {id} = req.params;
         if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
-        const post = await Post.findById(ObjectId(id));
+        const post = await Post.findById(ObjectId(id)).lean();
         req.post = post;
         if(!post) return res.status(404).json('post does not exist');
         else if(String(req.user) !== String(post.author)) return res.status(403).json('forbidden');
