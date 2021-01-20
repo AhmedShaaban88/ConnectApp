@@ -19,7 +19,7 @@ mongoose.connect(process.env.DB_URL, {
   useCreateIndex: true,
   useFindAndModify: false,
   poolSize: 100
-});
+}).catch(err => catchError({status: 500, message: 'Database connection failed'}));
 
 mongoose.connection.on("error", (err) => {
   mongoose.disconnect();
