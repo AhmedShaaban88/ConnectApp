@@ -5,7 +5,10 @@ module.exports = function (err, req, res, next) {
   else if(err.name === 'TokenExpiredError' || err.name === 'JsonWebTokenError'){
     return res.status(401).json({errors: err.message})
   }
-  return res
-    .status(err.status || 500)
-    .json(err.message || "Something wrong happen");
+  else if(res) {
+    return res
+        .status(err.status || 500)
+        .json(err.message || "Something wrong happen");
+  }
+  else throw new Error(err.message)
 };

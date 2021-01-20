@@ -26,6 +26,9 @@ mongoose.connection.on("error", (err) => {
   mongoose.connection.close();
   catchError({status: 500, message: 'Database connection failed'});
 });
+mongoose.connection.on("disconnected", (reason) => {
+  catchError({status: 500, message: 'Database connection stopped'});
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
