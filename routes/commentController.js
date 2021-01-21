@@ -132,7 +132,6 @@ commentController.put('/edit/:id/:commentId',
         if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
         const {content, deletedFiles} = req.body;
         const {comment} =req;
-        console.log(comment)
         if(!content && !req.files) return res.status(400).json('must sent text or media files');
         if (deletedFiles && deletedFiles.length > 0) {
             deletedFiles.map(media => {
