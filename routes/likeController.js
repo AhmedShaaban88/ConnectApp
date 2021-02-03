@@ -3,9 +3,10 @@ const mongoose = require('mongoose');
 const Post = require('../models/post');
 const Notification = require('../models/notification');
 const {ObjectId} = mongoose.Types;
+const asyncHandler = require('express-async-handler');
 
 
-likeController.put('/post/:id', async (req,res,next)=>{
+likeController.put('/post/:id', asyncHandler(async (req,res,next)=>{
     const {id} = req.params;
     const {user} = req;
     const post = await Post.findById(ObjectId(id));
@@ -21,7 +22,6 @@ likeController.put('/post/:id', async (req,res,next)=>{
         Post.updateOne({_id: ObjectId(id)}, {$addToSet: {likes: user}}, async (err, newPost) => {
             if (err) next(err);
             else if(String(post.author) !== String(user)){
-                try{
                     const duplicateNotification = await Notification.findOne(
                         {$and: [{by: ObjectId(user)}, {post: ObjectId(id)}, {type: 'like'}]}).lean();
                     if(!duplicateNotification){
@@ -37,16 +37,13 @@ likeController.put('/post/:id', async (req,res,next)=>{
                     }else{
                         return res.status(200).json('liked');
                     }
-                }catch (e) {
-                    next(e)
-                }
             }
             return res.status(200).json('liked');
 
         });
     }
-});
-likeController.get('/:id', async (req,res,next)=>{
+}));
+likeController.get('/:id', asyncHandler(async (req,res,next)=>{
     const {id} = req.params;
     if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
         Post.findById(ObjectId(id)).lean().populate({path: 'likes', select: '-confirmed -password -__v, -friends -forgetCode -forgetCodeExpires -avatarId'}).exec((err, post)=>{
@@ -54,6 +51,6 @@ likeController.get('/:id', async (req,res,next)=>{
             else if(!post) return res.status(404).json('post does not exist');
             res.status(200).json(post.likes);
         });
-});
+}));
 
 module.exports = likeController;

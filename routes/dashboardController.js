@@ -3,6 +3,8 @@ const Posts = require("../models/post");
 const mongoose = require('mongoose');
 const {dashboardIo} = require('../config/socket');
 const newFeed = require('../utils/newFeed');
+const asyncHandler = require('express-async-handler');
+
 dashboardIo.on('connect', async (socket) =>{
     const newPostNotifiy = Posts.watch([ { $match : {"operationType" : "insert" } }], { fullDocument : "updateLookup" });
     newPostNotifiy.once('change', async next => {
@@ -30,7 +32,7 @@ dashboardIo.on('connect', async (socket) =>{
 
 });
 
-dashboardController.get('/', async (req,res,next)=>{
+dashboardController.get('/', asyncHandler(async (req,res,next)=>{
     const {limit, skip} = req.query;
     let currentLimit = parseInt(limit);
     let currentSkip = parseInt(skip);
@@ -62,7 +64,7 @@ dashboardController.get('/', async (req,res,next)=>{
         if(err) next(err);
         res.status(200).json(result)
     })
-});
+}));
 
 
 module.exports = dashboardController;

@@ -5,6 +5,7 @@ const User = require('../models/user');
 const Notification = require('../models/notification');
 const {friendsIo} = require('../config/socket');
 const {ObjectId} = mongoose.Types;
+const asyncHandler = require('express-async-handler');
 
 friendsIo.on('connect', async (socket) =>{
     let friendShipCount = await FriendShip.countDocuments({$and: [
@@ -53,12 +54,11 @@ friendsIo.on('connect', async (socket) =>{
     });
 
 });
-friendShipController.put('/add', async (req,res)=>{
+friendShipController.put('/add', asyncHandler(async (req,res)=>{
     const {recipient} = req.body;
     const requester = req.user;
     if(!requester || !recipient) return res.status(400).json('both requester, recipient are required');
     else if(requester === recipient) return res.status(409).json('you can not send a friend request to yourself');
-    try {
         const friendShipRequester = await FriendShip.findOneAndUpdate(
             { requester: ObjectId(requester), recipient: ObjectId(recipient) },
             { status: 1 },
@@ -78,17 +78,13 @@ friendShipController.put('/add', async (req,res)=>{
             { $addToSet: { friends: friendShipRecipient._id }}
         );
         return res.status(200).json('add a new friend successfully');
-    }catch (e) {
-        next(e)
-    }
 
-});
-friendShipController.put('/remove', async (req,res,next)=>{
+}));
+friendShipController.put('/remove', asyncHandler(async (req,res,next)=>{
     const {recipient} = req.body;
     const requester = req.user;
     if(!requester || !recipient) return res.status(400).json('both requester, recipient are required');
     else if(requester === recipient) return res.status(409).json('you can not remove a friend request from yourself');
-    try {
         const friendShipRequester = await FriendShip.findOneAndRemove(
             { requester: ObjectId(requester), recipient: ObjectId(recipient) }
         );
@@ -105,12 +101,9 @@ friendShipController.put('/remove', async (req,res,next)=>{
             { $pull: { friends: friendShipRecipient._id }}
         );
         return res.status(200).json('remove a friend successfully');
-    }catch (e) {
-        next(e);
-    }
 
-});
-friendShipController.put('/accept', async (req,res,next)=>{
+}));
+friendShipController.put('/accept', asyncHandler(async (req,res,next)=>{
     const {recipient} = req.body;
     const requester = req.user;
     if(!requester || !recipient) return res.status(400).json('both requester, recipient are required');
@@ -119,7 +112,6 @@ friendShipController.put('/accept', async (req,res,next)=>{
         {requester: ObjectId(requester), recipient: ObjectId(recipient), status: 2}
         ).lean();
     if(friendShipDoc){
-        try {
             await FriendShip.findOneAndUpdate(
                 { requester: ObjectId(recipient), recipient: ObjectId(requester) },
                 {status: 3}
@@ -135,10 +127,6 @@ friendShipController.put('/accept', async (req,res,next)=>{
             });
             const notificationSave = await notification.save();
             if(!notificationSave) next(new Error('something wrong when trying to save the notification'));
-        }
-        catch (e) {
-            next(e);
-        }
 
         if(String(friendShipDoc.requester) !== String(requester))
             return res.status(403).json('forbidden');
@@ -146,8 +134,8 @@ friendShipController.put('/accept', async (req,res,next)=>{
     }
     return res.status(404).json('this relationship not found');
 
-});
-friendShipController.get('/friends/:id', async (req,res,next)=>{
+}));
+friendShipController.get('/friends/:id', asyncHandler(async (req,res,next)=>{
     const {id} = req.params;
     if(!id) return res.status(400).json('User id required');
     else if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
@@ -156,7 +144,6 @@ friendShipController.get('/friends/:id', async (req,res,next)=>{
   let currentLimit = parseInt(limit);
   if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
   if(page < 1 || !Boolean(currentPage)) currentPage =1;
-    try {
         FriendShip.paginate({$and:[
                 {"requester": ObjectId(id)},
                 {"status":  3 }
@@ -164,18 +151,14 @@ friendShipController.get('/friends/:id', async (req,res,next)=>{
                 select: '-confirmed -password -__v -friends -forgetCode -forgetCodeExpires -avatarId'}}, (err, results)=>{
             res.status(200).json(results);
         });
-    } catch (err) {
-        next(err)
-    }
-});
-friendShipController.get('/search', async (req,res,next)=>{
+}));
+friendShipController.get('/search', asyncHandler(async (req,res,next)=>{
   let {q,limit, page} = req.query;
     let currentPage = parseInt(page);
     let currentLimit = parseInt(limit);
     if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
     if(page < 1 || !Boolean(currentPage)) currentPage =1;
     const keyword = q.trim();
-    try {
         if(!keyword) return res.status(400).json('please enter your keyword');
        User.paginate({ $text: { $search: keyword} },
            {select: {score: {$meta: 'textScore'}, confirmed: 0, friends: 0, forgetCode: 0, forgetCodeExpires: 0,
@@ -195,19 +178,13 @@ friendShipController.get('/search', async (req,res,next)=>{
            }
            });
 
-    } catch (err) {
-        next(err)
-    }
-
-
-});
-friendShipController.get('/requests', async (req,res,next)=>{
+}));
+friendShipController.get('/requests', asyncHandler(async (req,res,next)=>{
     let {limit, skip} = req.query;
     let currentSkip = parseInt(skip);
     let currentLimit = parseInt(limit);
     if(limit < 5 || !Boolean(currentLimit)) currentLimit =5;
     if(skip < 0 || !Boolean(currentSkip)) currentSkip =0;
-    try {
         FriendShip.paginate({$and:[
                 {"requester": ObjectId(req.user)},
                 {"status":  2 }
@@ -215,9 +192,7 @@ friendShipController.get('/requests', async (req,res,next)=>{
                 select: '-confirmed -password -__v -friends -forgetCode -forgetCodeExpires -avatarId'}}, (err, results)=>{
             res.status(200).json(results);
         });
-    } catch (err) {
-        next(err)
-    }
-});
+
+}));
 
 module.exports = friendShipController;

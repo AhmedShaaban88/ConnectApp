@@ -6,6 +6,8 @@ const User = require('../models/user');
 const messageUploader = require('../config/messageUploader');
 const {messageIo} = require('../config/socket');
 const {ObjectId} = mongoose.Types;
+const asyncHandler = require('express-async-handler');
+
 messageIo.on('connect', async (socket) =>{
     const userId = ObjectId(socket.userId);
     let unreadMessages = await Message.countDocuments({$and: [
@@ -46,7 +48,7 @@ messageIo.on('connect', async (socket) =>{
 });
 messagesController.post('/send-message/:id',
     messageUploader.array('media') ,
-    async (req,res,next) => {
+    asyncHandler(async (req,res,next) => {
     const {id} = req.params;
         if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
         const {content} = req.body;
@@ -82,22 +84,18 @@ messagesController.post('/send-message/:id',
             });
         });
 
-});
-messagesController.put('/seen/:id', async (req,res,next)=>{
+}));
+messagesController.put('/seen/:id', asyncHandler(async (req,res,next)=>{
     const {id} = req.params;
     if(!id) return res.status(400).json('id is required');
     else if(!ObjectId.isValid(id)) return res.status(400).json('id is not valid');
-    try{
         const message = await Message.findByIdAndUpdate(ObjectId(id), {seen: ObjectId(req.user)}, {new: true});
         if(!message) return res.status(404).json('this message does not exist');
         return res.status(200).json(message);
-    }catch (e) {
-        next(e)
-    }
 
 
-});
-messagesController.get('/rooms', async (req,res,next)=>{
+}));
+messagesController.get('/rooms', asyncHandler(async (req,res,next)=>{
     let {limit, skip} = req.query;
     let currentSkip = parseInt(skip);
     let currentLimit = parseInt(limit);
@@ -115,9 +113,9 @@ messagesController.get('/rooms', async (req,res,next)=>{
             select: '-confirmed -password -__v -friends -forgetCode -forgetCodeExpires -avatarId'
             }]});
     res.status(200).json(rooms)
-});
+}));
 
-messagesController.get('/:id', async (req,res,next)=>{
+messagesController.get('/:id', asyncHandler(async (req,res,next)=>{
     const {id} = req.params;
     let {limit, skip} = req.query;
     let currentLimit = parseInt(limit);
@@ -137,25 +135,19 @@ messagesController.get('/:id', async (req,res,next)=>{
                   });
                   const newRoomDoc = await newRoom.save();
                   if(!newRoomDoc) next(new Error('something wrong when trying to save the chat room'));
-                  try {
                       return res.status(200).json('create room successfully');
-                  } catch (err) {
-                      next(err)
-                  }
+
               }else{
-                  try {
+
                      const messages =  await Message.paginate({roomId: ObjectId(room._id)},
                          {select: '-__v -updatedAt -roomId', limit: currentLimit,
                              offset: currentSkip,
                              sort: {'delivered_at': -1}});
                      return res.status(200).json({...messages, friend: friend, roomId: room._id});
-                  } catch (err) {
-                      next(err)
-                  }
               }
 
 
 
-});
+}));
 
 module.exports = messagesController;
